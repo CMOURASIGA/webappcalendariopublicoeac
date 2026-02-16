@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect, useCallback } from 'react';
-import { CalendarEvent, EventType, ViewMode } from './types';
+import { CalendarEvent, EventType, ViewMode, EVENT_DOT_COLORS } from './types';
 import { fetchPublicEvents } from './services/eventService';
 import CalendarGrid from './components/CalendarGrid';
 import ListView from './components/ListView';
@@ -13,6 +13,9 @@ const App: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [selectedDay, setSelectedDay] = useState<number | null>(null);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+
+  const currentYear = currentDate.getFullYear();
+  const currentMonth = currentDate.getMonth();
 
   const loadEvents = useCallback(async () => {
     setLoading(true);
@@ -30,8 +33,15 @@ const App: React.FC = () => {
     loadEvents();
   }, [loadEvents]);
 
-  const changeMonth = (offset: number) => {
-    const newDate = new Date(currentDate.getFullYear(), currentDate.getMonth() + offset, 1);
+  const changeYear = (offset: number) => {
+    const newDate = new Date(currentDate.getFullYear() + offset, currentDate.getMonth(), 1);
+    setCurrentDate(newDate);
+    setSelectedDay(null);
+    setIsSidebarOpen(false);
+  };
+
+  const setMonth = (monthIndex: number) => {
+    const newDate = new Date(currentDate.getFullYear(), monthIndex, 1);
     setCurrentDate(newDate);
     setSelectedDay(null);
     setIsSidebarOpen(false);
@@ -42,40 +52,40 @@ const App: React.FC = () => {
     setIsSidebarOpen(true);
   };
 
-  const formattedMonth = currentDate.toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' });
+  const months = [
+    'Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 
+    'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez'
+  ];
 
   return (
     <div className="min-h-screen bg-[#f8fafc] font-sans antialiased text-slate-900 selection:bg-blue-100">
-      {/* HEADER EAC - ESTILO REFINADO */}
+      {/* HEADER EAC */}
       <header className="bg-[#112760] text-white shadow-2xl sticky top-0 z-[60] border-b border-white/5">
         <div className="max-w-[1600px] mx-auto px-4 md:px-8 h-20 flex items-center justify-between relative">
-          {/* Logo Sem Fundo Extra */}
           <div className="flex items-center z-10">
             <img 
               src="https://imgur.com/c5XQ7TW.png" 
               alt="Logo EAC" 
-              className="h-12 w-auto object-contain drop-shadow-md" 
+              className="h-10 md:h-12 w-auto object-contain drop-shadow-md" 
             />
           </div>
           
-          {/* Título Centralizado */}
           <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-            <h1 className="text-base md:text-xl font-black uppercase tracking-[0.25em] text-center drop-shadow-sm px-4">
+            <h1 className="text-sm md:text-xl font-black uppercase tracking-[0.25em] text-center drop-shadow-sm px-4">
               Calendário de Eventos
             </h1>
           </div>
 
-          {/* Seletor de Modo (Direita) */}
           <div className="flex bg-white/10 p-1 rounded-2xl border border-white/10 z-10 backdrop-blur-md">
             <button 
               onClick={() => setViewMode('calendar')}
-              className={`px-4 md:px-6 py-2 text-[10px] font-black uppercase tracking-widest rounded-xl transition-all duration-300 ${viewMode === 'calendar' ? 'bg-white text-[#112760] shadow-xl scale-105' : 'text-white/70 hover:text-white hover:bg-white/5'}`}
+              className={`px-3 md:px-6 py-2 text-[9px] md:text-[10px] font-black uppercase tracking-widest rounded-xl transition-all duration-300 ${viewMode === 'calendar' ? 'bg-white text-[#112760] shadow-xl' : 'text-white/70 hover:text-white'}`}
             >
               Grade
             </button>
             <button 
               onClick={() => setViewMode('list')}
-              className={`px-4 md:px-6 py-2 text-[10px] font-black uppercase tracking-widest rounded-xl transition-all duration-300 ${viewMode === 'list' ? 'bg-white text-[#112760] shadow-xl scale-105' : 'text-white/70 hover:text-white hover:bg-white/5'}`}
+              className={`px-3 md:px-6 py-2 text-[9px] md:text-[10px] font-black uppercase tracking-widest rounded-xl transition-all duration-300 ${viewMode === 'list' ? 'bg-white text-[#112760] shadow-xl' : 'text-white/70 hover:text-white'}`}
             >
               Lista
             </button>
@@ -83,40 +93,47 @@ const App: React.FC = () => {
         </div>
       </header>
 
-      <main className="max-w-[1200px] mx-auto px-4 md:px-6 py-10 md:py-14">
-        {/* NAVEGAÇÃO DE MÊS - UX OTIMIZADA */}
-        <div className="flex items-center justify-between mb-12 bg-white p-4 md:p-6 rounded-[32px] shadow-sm border border-slate-100">
-          <button 
-            onClick={() => changeMonth(-1)}
-            className="p-4 bg-slate-50 text-[#112760] rounded-2xl hover:bg-[#112760] hover:text-white transition-all duration-300 shadow-sm active:scale-90"
-            title="Mês Anterior"
-          >
-            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M15 19l-7-7 7-7" />
-            </svg>
-          </button>
-          
-          <div className="text-center">
-            <h2 className="text-xl md:text-4xl font-black text-[#1e293b] uppercase tracking-tighter capitalize leading-none">
-              {formattedMonth}
-            </h2>
+      <main className="max-w-[1200px] mx-auto px-4 md:px-6 py-6 md:py-10">
+        
+        {/* NAVEGAÇÃO DE DATA */}
+        <div className="bg-white rounded-[40px] shadow-sm border border-slate-100 p-6 md:p-8 mb-6 overflow-hidden">
+          <div className="flex items-center justify-center space-x-8 mb-8">
+            <button onClick={() => changeYear(-1)} className="p-3 text-[#112760] hover:bg-slate-50 rounded-full transition-all active:scale-75">
+              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="4" d="M15 19l-7-7 7-7" /></svg>
+            </button>
+            <h2 className="text-4xl md:text-5xl font-black text-[#112760] tracking-tighter tabular-nums">{currentYear}</h2>
+            <button onClick={() => changeYear(1)} className="p-3 text-[#112760] hover:bg-slate-50 rounded-full transition-all active:scale-75">
+              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="4" d="M9 5l7 7-7 7" /></svg>
+            </button>
           </div>
 
-          <button 
-            onClick={() => changeMonth(1)}
-            className="p-4 bg-slate-50 text-[#112760] rounded-2xl hover:bg-[#112760] hover:text-white transition-all duration-300 shadow-sm active:scale-90"
-            title="Próximo Mês"
-          >
-            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M9 5l7 7-7 7" />
-            </svg>
-          </button>
+          <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 lg:grid-cols-12 gap-2">
+            {months.map((month, index) => (
+              <button
+                key={month}
+                onClick={() => setMonth(index)}
+                className={`py-3 md:py-4 rounded-2xl text-[11px] font-black uppercase tracking-widest transition-all duration-300 active:scale-95 ${currentMonth === index ? 'bg-[#112760] text-white shadow-lg' : 'bg-slate-50 text-slate-400 hover:bg-slate-100 hover:text-[#112760]'}`}
+              >
+                {month}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {/* LEGENDA DE CORES */}
+        <div className="flex flex-wrap justify-center gap-3 md:gap-6 mb-10 px-4">
+          {Object.entries(EVENT_DOT_COLORS).map(([type, colorClass]) => (
+            <div key={type} className="flex items-center space-x-2.5 bg-white py-2 px-4 rounded-2xl border border-slate-100 shadow-sm transition-all hover:shadow-md">
+              <span className={`w-3.5 h-3.5 rounded-full ${colorClass} shadow-sm`}></span>
+              <span className="text-[9px] md:text-[10px] font-black uppercase tracking-widest text-slate-500 whitespace-nowrap">{type}</span>
+            </div>
+          ))}
         </div>
 
         {loading ? (
           <div className="flex flex-col items-center justify-center h-[400px]">
             <div className="w-14 h-14 border-[6px] border-[#112760]/10 border-t-[#112760] rounded-full animate-spin"></div>
-            <span className="mt-6 font-black text-slate-400 uppercase text-[11px] tracking-[0.3em]">Carregando Agenda</span>
+            <span className="mt-6 font-black text-slate-400 uppercase text-[11px] tracking-[0.3em]">Sincronizando Agenda</span>
           </div>
         ) : (
           <div className="animate-in fade-in slide-in-from-bottom-6 duration-700 ease-out">
@@ -134,7 +151,6 @@ const App: React.FC = () => {
         )}
       </main>
 
-      {/* DRAWER LATERAL DE DETALHES */}
       <DaySidebar 
         isOpen={isSidebarOpen} 
         onClose={() => {setIsSidebarOpen(false); setSelectedDay(null);}}
@@ -142,8 +158,8 @@ const App: React.FC = () => {
         events={selectedDay ? events.filter(e => e.date === `${currentDate.getFullYear()}-${String(currentDate.getMonth() + 1).padStart(2, '0')}-${String(selectedDay).padStart(2, '0')}`) : []}
       />
 
-      <footer className="py-12 text-center text-slate-400">
-        <p className="text-[10px] font-bold uppercase tracking-widest opacity-60">EAC • Todos os direitos reservados • {new Date().getFullYear()}</p>
+      <footer className="py-12 text-center">
+        <p className="text-[10px] font-black uppercase tracking-[0.4em] text-slate-300">EAC • {currentYear}</p>
       </footer>
     </div>
   );

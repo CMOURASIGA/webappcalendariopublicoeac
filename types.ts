@@ -5,7 +5,9 @@ export type EventType =
   | 'Circulo' 
   | 'Pós-Encontro' 
   | 'Missa' 
-  | 'Preparação Encontro';
+  | 'Preparação Encontro'
+  | 'Reunião'
+  | 'Outro';
 
 export interface CalendarEvent {
   id: string;
@@ -20,20 +22,29 @@ export interface CalendarEvent {
 
 export type ViewMode = 'calendar' | 'list';
 
+/**
+ * Cores baseadas nas imagens fornecidas:
+ * Missa e Preparação possuem fundos escuros com texto claro.
+ * Encontro, Cantina, Circulo e Pós possuem fundos claros com texto escuro.
+ */
 export const EVENT_COLORS: Record<EventType, string> = {
-  'Encontro': 'bg-blue-50 text-[#112760] border-blue-100',
-  'Cantina': 'bg-orange-50 text-orange-600 border-orange-100',
-  'Circulo': 'bg-emerald-50 text-emerald-600 border-emerald-100',
-  'Pós-Encontro': 'bg-indigo-50 text-indigo-600 border-indigo-100',
-  'Missa': 'bg-rose-50 text-rose-600 border-rose-100',
-  'Preparação Encontro': 'bg-slate-50 text-slate-600 border-slate-100',
+  'Encontro': 'bg-[#bfdbfe] text-[#1e40af] border-[#93c5fd]',
+  'Cantina': 'bg-[#dbeafe] text-[#1e40af] border-[#bfdbfe]',
+  'Circulo': 'bg-[#ddd6fe] text-[#5b21b6] border-[#c4b5fd]',
+  'Pós-Encontro': 'bg-[#fef3c7] text-[#92400e] border-[#fde68a]',
+  'Missa': 'bg-[#065f46] text-white border-[#065f46]',
+  'Preparação Encontro': 'bg-[#991b1b] text-white border-[#991b1b]',
+  'Reunião': 'bg-[#f1f5f9] text-[#475569] border-[#e2e8f0]',
+  'Outro': 'bg-[#f8fafc] text-[#64748b] border-[#f1f5f9]',
 };
 
 export const EVENT_DOT_COLORS: Record<EventType, string> = {
-  'Encontro': 'bg-[#112760]',
-  'Cantina': 'bg-orange-500',
-  'Circulo': 'bg-emerald-500',
-  'Pós-Encontro': 'bg-indigo-500',
-  'Missa': 'bg-rose-500',
-  'Preparação Encontro': 'bg-slate-400',
+  'Encontro': 'bg-[#3b82f6]',
+  'Cantina': 'bg-[#60a5fa]',
+  'Circulo': 'bg-[#8b5cf6]',
+  'Pós-Encontro': 'bg-[#f59e0b]',
+  'Missa': 'bg-[#10b981]',
+  'Preparação Encontro': 'bg-[#ef4444]',
+  'Reunião': 'bg-[#64748b]',
+  'Outro': 'bg-[#94a3b8]',
 };

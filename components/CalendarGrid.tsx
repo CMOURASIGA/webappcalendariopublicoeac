@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { CalendarEvent, EVENT_DOT_COLORS } from '../types';
+import { CalendarEvent, EVENT_DOT_COLORS, EventType } from '../types';
 
 interface CalendarGridProps {
   currentDate: Date;
@@ -47,14 +47,19 @@ const CalendarGrid: React.FC<CalendarGridProps> = ({ currentDate, events, onDayC
           const isToday = new Date().toDateString() === new Date(year, month, day).toDateString();
           const isSelected = selectedDay === day;
 
+          // Lógica de 4 bolas de cores únicas + contador
+          const uniqueTypes = Array.from(new Set(dayEvents.map(e => e.type))) as EventType[];
+          const displayedTypes = uniqueTypes.slice(0, 4);
+          const remainingCount = dayEvents.length - displayedTypes.length;
+
           return (
             <button 
               key={day} 
               onClick={() => onDayClick(day)}
-              className={`h-28 md:h-40 border-b border-r border-slate-50 p-2 md:p-6 transition-all duration-300 group relative text-left flex flex-col items-center md:items-start ${idx % 7 === 6 ? 'border-r-0' : ''} ${isSelected ? 'bg-blue-50/60 z-10' : 'hover:bg-slate-50/80 hover:translate-y-[-2px]'}`}
+              className={`h-28 md:h-40 border-b border-r border-slate-50 p-3 md:p-6 transition-all duration-300 group relative text-left flex flex-col items-center md:items-start ${idx % 7 === 6 ? 'border-r-0' : ''} ${isSelected ? 'bg-blue-50/60 z-10' : 'hover:bg-slate-50/80'}`}
             >
               <div className="flex justify-between w-full items-start">
-                <span className={`text-base md:text-xl font-black w-10 h-10 md:w-12 md:h-12 flex items-center justify-center rounded-2xl transition-all duration-500 ${
+                <span className={`text-base md:text-xl font-black w-9 h-9 md:w-12 md:h-12 flex items-center justify-center rounded-2xl transition-all duration-500 ${
                   isToday ? 'bg-[#112760] text-white shadow-xl shadow-blue-200 scale-105' : 'text-slate-400 group-hover:text-[#112760]'
                 } ${isSelected && !isToday ? 'bg-blue-100 text-[#112760]' : ''}`}>
                   {day}
@@ -65,17 +70,18 @@ const CalendarGrid: React.FC<CalendarGridProps> = ({ currentDate, events, onDayC
                 )}
               </div>
 
-              {/* Indicadores de Eventos */}
-              <div className="mt-auto flex flex-wrap justify-center md:justify-start gap-1.5 w-full">
-                {dayEvents.slice(0, 5).map((event) => (
+              {/* Indicadores de Eventos (Bolas aumentadas e agrupadas) */}
+              <div className="mt-auto flex items-center flex-wrap justify-center md:justify-start gap-1.5 w-full">
+                {displayedTypes.map((type) => (
                   <span 
-                    key={event.id} 
-                    className={`w-2 h-2 rounded-full ${EVENT_DOT_COLORS[event.type]} shadow-sm ring-1 ring-white`}
-                    title={event.title}
+                    key={type} 
+                    className={`w-2.5 h-2.5 md:w-3.5 md:h-3.5 rounded-full ${EVENT_DOT_COLORS[type]} shadow-sm ring-1 ring-white`}
                   ></span>
                 ))}
-                {dayEvents.length > 5 && (
-                  <span className="text-[9px] font-black text-slate-300 leading-none">+{dayEvents.length - 5}</span>
+                {remainingCount > 0 && (
+                  <span className="text-[10px] md:text-[11px] font-black text-[#112760] ml-0.5 whitespace-nowrap">
+                    +{remainingCount}
+                  </span>
                 )}
               </div>
             </button>
