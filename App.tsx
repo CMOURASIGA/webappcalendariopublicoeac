@@ -62,21 +62,28 @@ const App: React.FC = () => {
       {/* HEADER EAC */}
       <header className="bg-[#112760] text-white shadow-2xl sticky top-0 z-[60] border-b border-white/5">
         <div className="max-w-[1600px] mx-auto px-4 md:px-8 h-20 flex items-center justify-between relative">
-          <div className="flex items-center z-10">
+          {/* Logo e Nome da Paróquia */}
+          <div className="flex items-center z-10 space-x-3 md:space-x-4">
             <img 
               src="https://imgur.com/c5XQ7TW.png" 
               alt="Logo EAC" 
               className="h-10 md:h-12 w-auto object-contain drop-shadow-md" 
             />
+            <div className="hidden sm:flex flex-col border-l border-white/20 pl-3 md:pl-4">
+              <span className="text-[10px] md:text-[11px] font-black uppercase tracking-[0.2em] opacity-70 leading-none mb-1">EAC</span>
+              <span className="text-[12px] md:text-[14px] font-black uppercase tracking-tight leading-none whitespace-nowrap">Porciúncula de Sant'Anna</span>
+            </div>
           </div>
           
-          <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-            <h1 className="text-sm md:text-xl font-black uppercase tracking-[0.25em] text-center drop-shadow-sm px-4">
+          {/* Título Centralizado */}
+          <div className="absolute inset-0 flex items-center justify-center pointer-events-none px-4">
+            <h1 className="text-[10px] sm:text-sm md:text-xl font-black uppercase tracking-[0.15em] md:tracking-[0.25em] text-center drop-shadow-sm leading-tight">
               Calendário de Eventos
             </h1>
           </div>
 
-          <div className="flex bg-white/10 p-1 rounded-2xl border border-white/10 z-10 backdrop-blur-md">
+          {/* Seletor de Modo */}
+          <div className="flex bg-white/10 p-1 rounded-2xl border border-white/10 z-10 backdrop-blur-md ml-auto sm:ml-0">
             <button 
               onClick={() => setViewMode('calendar')}
               className={`px-3 md:px-6 py-2 text-[9px] md:text-[10px] font-black uppercase tracking-widest rounded-xl transition-all duration-300 ${viewMode === 'calendar' ? 'bg-white text-[#112760] shadow-xl' : 'text-white/70 hover:text-white'}`}
