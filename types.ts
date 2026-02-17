@@ -17,10 +17,22 @@ export interface CalendarEvent {
   endTime?: string;
   description?: string;
   location?: string;
+  status?: string;
   type: EventType;
 }
 
 export type ViewMode = 'calendar' | 'list';
+
+export const EVENT_TYPE_LABELS: Record<EventType, string> = {
+  'Encontro': 'Encontro',
+  'Cantina': 'Cantina',
+  'Circulo': 'Circulo',
+  'Pós-Encontro': 'Pós-Encontro',
+  'Missa': 'Missa',
+  'Preparação Encontro': 'Preparação',
+  'Reunião': 'Reunião',
+  'Outro': 'Não EAC',
+};
 
 /**
  * Cores baseadas nas imagens fornecidas:
@@ -35,7 +47,7 @@ export const EVENT_COLORS: Record<EventType, string> = {
   'Missa': 'bg-[#065f46] text-white border-[#065f46]',
   'Preparação Encontro': 'bg-[#991b1b] text-white border-[#991b1b]',
   'Reunião': 'bg-[#f1f5f9] text-[#475569] border-[#e2e8f0]',
-  'Outro': 'bg-[#f8fafc] text-[#64748b] border-[#f1f5f9]',
+  'Outro': 'bg-[#111827] text-[#fde68a] border-[#facc15]',
 };
 
 export const EVENT_DOT_COLORS: Record<EventType, string> = {
@@ -46,5 +58,5 @@ export const EVENT_DOT_COLORS: Record<EventType, string> = {
   'Missa': 'bg-[#10b981]',
   'Preparação Encontro': 'bg-[#ef4444]',
   'Reunião': 'bg-[#64748b]',
-  'Outro': 'bg-[#94a3b8]',
+  'Outro': 'bg-[#facc15]',
 };

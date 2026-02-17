@@ -47,7 +47,7 @@ const CalendarGrid: React.FC<CalendarGridProps> = ({ currentDate, events, onDayC
           const isToday = new Date().toDateString() === new Date(year, month, day).toDateString();
           const isSelected = selectedDay === day;
 
-          // Lógica de 4 bolas de cores únicas + contador
+          // Lógica de 4 marcadores de cores únicas + contador
           const uniqueTypes = Array.from(new Set(dayEvents.map(e => e.type))) as EventType[];
           const displayedTypes = uniqueTypes.slice(0, 4);
           const remainingCount = dayEvents.length - displayedTypes.length;
@@ -65,17 +65,24 @@ const CalendarGrid: React.FC<CalendarGridProps> = ({ currentDate, events, onDayC
                   {day}
                 </span>
                 
-                {isSelected && (
-                   <div className="w-2 h-2 bg-[#112760] rounded-full animate-ping"></div>
-                )}
+                <div className="flex items-center gap-2">
+                  {dayEvents.length > 0 && (
+                    <span className="px-2 py-1 rounded-lg bg-[#112760] text-white text-[9px] md:text-[10px] font-black tracking-wider shadow-sm">
+                      {dayEvents.length}
+                    </span>
+                  )}
+                  {isSelected && (
+                    <div className="w-2 h-2 bg-[#112760] rounded-full animate-ping"></div>
+                  )}
+                </div>
               </div>
 
-              {/* Indicadores de Eventos (Bolas aumentadas e agrupadas) */}
+              {/* Indicadores de Eventos (marcadores em barra para melhor visibilidade) */}
               <div className="mt-auto flex items-center flex-wrap justify-center md:justify-start gap-1.5 w-full">
                 {displayedTypes.map((type) => (
                   <span 
                     key={type} 
-                    className={`w-2.5 h-2.5 md:w-3.5 md:h-3.5 rounded-full ${EVENT_DOT_COLORS[type]} shadow-sm ring-1 ring-white`}
+                    className={`w-5 h-2.5 md:w-7 md:h-3.5 rounded-md ${EVENT_DOT_COLORS[type]} shadow-sm ring-1 ring-white`}
                   ></span>
                 ))}
                 {remainingCount > 0 && (

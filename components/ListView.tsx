@@ -1,12 +1,37 @@
 
 import React from 'react';
-import { CalendarEvent, EVENT_COLORS } from '../types';
+import { CalendarEvent, EVENT_COLORS, EVENT_TYPE_LABELS } from '../types';
 
 interface ListViewProps {
   events: CalendarEvent[];
+  onEventDetailsClick: (event: CalendarEvent) => void;
 }
 
-const ListView: React.FC<ListViewProps> = ({ events }) => {
+const normalizeStatus = (status?: string): string => {
+  return String(status || '')
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .trim()
+    .toLowerCase();
+};
+
+const getStatusClasses = (status?: string): string => {
+  const normalized = normalizeStatus(status);
+
+  if (normalized.includes('confirmado')) return 'bg-emerald-100 text-emerald-800 border-emerald-200';
+  if (normalized.includes('pendente')) return 'bg-amber-100 text-amber-800 border-amber-200';
+  if (normalized.includes('cancelado')) return 'bg-red-100 text-red-800 border-red-200';
+  if (normalized.includes('adiado') || normalized.includes('remarcado')) return 'bg-orange-100 text-orange-800 border-orange-200';
+
+  return 'bg-slate-100 text-slate-700 border-slate-200';
+};
+
+const getStatusLabel = (status?: string): string => {
+  const trimmed = String(status || '').trim();
+  return trimmed || 'Não informado';
+};
+
+const ListView: React.FC<ListViewProps> = ({ events, onEventDetailsClick }) => {
   // Agrupar eventos por data
   const grouped = events.reduce((acc, event) => {
     if (!acc[event.date]) acc[event.date] = [];
@@ -59,7 +84,10 @@ const ListView: React.FC<ListViewProps> = ({ events }) => {
                       <h4 className="text-xl md:text-2xl font-black text-slate-800 leading-tight mb-3">{event.title}</h4>
                       <div className="flex flex-wrap items-center gap-4">
                         <span className={`text-[10px] font-black uppercase tracking-widest px-3 py-1 rounded-lg shadow-sm border ${EVENT_COLORS[event.type]}`}>
-                          {event.type}
+                          {EVENT_TYPE_LABELS[event.type]}
+                        </span>
+                        <span className={`text-[10px] font-black uppercase tracking-widest px-3 py-1 rounded-lg border ${getStatusClasses(event.status)}`}>
+                          Situação: {getStatusLabel(event.status)}
                         </span>
                         {event.location && (
                           <span className="text-[11px] text-slate-400 font-bold uppercase flex items-center bg-slate-50 px-3 py-1 rounded-lg">
@@ -72,7 +100,10 @@ const ListView: React.FC<ListViewProps> = ({ events }) => {
                   </div>
                   
                   <div className="mt-8 md:mt-0">
-                    <button className="w-full md:w-auto px-8 py-4 bg-slate-50 hover:bg-[#112760] hover:text-white rounded-[24px] text-[10px] font-black uppercase tracking-[0.2em] transition-all duration-300 shadow-sm active:scale-95">
+                    <button
+                      onClick={() => onEventDetailsClick(event)}
+                      className="w-full md:w-auto px-8 py-4 bg-slate-50 hover:bg-[#112760] hover:text-white rounded-[24px] text-[10px] font-black uppercase tracking-[0.2em] transition-all duration-300 shadow-sm active:scale-95"
+                    >
                       Ver Detalhes
                     </button>
                   </div>

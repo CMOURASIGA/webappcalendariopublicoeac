@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { CalendarEvent, EVENT_COLORS } from '../types';
+import { CalendarEvent, EVENT_COLORS, EVENT_TYPE_LABELS } from '../types';
 
 interface DaySidebarProps {
   isOpen: boolean;
@@ -8,6 +8,30 @@ interface DaySidebarProps {
   date: Date | null;
   events: CalendarEvent[];
 }
+
+const normalizeStatus = (status?: string): string => {
+  return String(status || '')
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .trim()
+    .toLowerCase();
+};
+
+const getStatusClasses = (status?: string): string => {
+  const normalized = normalizeStatus(status);
+
+  if (normalized.includes('confirmado')) return 'bg-emerald-100 text-emerald-800 border-emerald-200';
+  if (normalized.includes('pendente')) return 'bg-amber-100 text-amber-800 border-amber-200';
+  if (normalized.includes('cancelado')) return 'bg-red-100 text-red-800 border-red-200';
+  if (normalized.includes('adiado') || normalized.includes('remarcado')) return 'bg-orange-100 text-orange-800 border-orange-200';
+
+  return 'bg-slate-100 text-slate-700 border-slate-200';
+};
+
+const getStatusLabel = (status?: string): string => {
+  const trimmed = String(status || '').trim();
+  return trimmed || 'Não informado';
+};
 
 const DaySidebar: React.FC<DaySidebarProps> = ({ isOpen, onClose, date, events }) => {
   return (
@@ -58,7 +82,7 @@ const DaySidebar: React.FC<DaySidebarProps> = ({ isOpen, onClose, date, events }
               >
                 <div className="flex justify-between items-center mb-6">
                   <span className={`px-4 py-1.5 rounded-xl text-[10px] font-black uppercase tracking-widest border shadow-sm ${EVENT_COLORS[event.type]}`}>
-                    {event.type}
+                    {EVENT_TYPE_LABELS[event.type]}
                   </span>
                   <div className="flex items-center text-[#112760] font-black text-xs bg-blue-50 px-3 py-1.5 rounded-xl">
                     <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
@@ -67,6 +91,13 @@ const DaySidebar: React.FC<DaySidebarProps> = ({ isOpen, onClose, date, events }
                 </div>
                 
                 <h4 className="text-xl md:text-2xl font-black text-slate-800 mb-4 leading-tight">{event.title}</h4>
+
+                <div className="flex items-center gap-3 mb-5">
+                  <span className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">Situação</span>
+                  <span className={`px-3 py-1 rounded-lg border text-[11px] font-black uppercase tracking-wider ${getStatusClasses(event.status)}`}>
+                    {getStatusLabel(event.status)}
+                  </span>
+                </div>
                 
                 {event.location && (
                   <div className="flex items-start text-sm text-slate-500 mb-6 bg-slate-50 p-4 rounded-2xl">

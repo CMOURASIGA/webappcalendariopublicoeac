@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { EventType, EVENT_DOT_COLORS } from '../types';
+import { EventType, EVENT_DOT_COLORS, EVENT_TYPE_LABELS } from '../types';
 
 interface FilterSidebarProps {
   selectedTypes: Set<EventType>;
@@ -49,7 +49,7 @@ const FilterSidebar: React.FC<FilterSidebarProps> = ({
           >
             <span className={`w-3 h-3 rounded-full mr-4 ${EVENT_DOT_COLORS[type]} shadow-sm ring-2 ring-white`}></span>
             <span className={`text-[11px] font-black uppercase tracking-widest ${selectedTypes.has(type) ? 'text-[#112760]' : 'text-slate-400'}`}>
-              {type}
+              {EVENT_TYPE_LABELS[type]}
             </span>
           </button>
         ))}

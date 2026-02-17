@@ -83,11 +83,7 @@ const mapAppsScriptEvents = (events: AppsScriptEvent[]): CalendarEvent[] =>
 
       if (!title || !parsedStart) return null;
 
-      const owner = String(event.proprietario || '').trim();
       const status = String(event.status || '').trim();
-      const descriptionParts: string[] = [];
-      if (owner) descriptionParts.push(`Proprietário: ${owner}`);
-      if (status) descriptionParts.push(`Status: ${status}`);
 
       return {
         id: String(event.id || `ev-${index}`),
@@ -96,7 +92,7 @@ const mapAppsScriptEvents = (events: AppsScriptEvent[]): CalendarEvent[] =>
         startTime: parsedStart.time,
         endTime: parsedEnd?.time,
         location: String(event.local || '').trim() || undefined,
-        description: descriptionParts.length > 0 ? descriptionParts.join(' | ') : undefined,
+        status: status || undefined,
         type: toEventType(String(event.tipo || title)),
       } as CalendarEvent;
     })

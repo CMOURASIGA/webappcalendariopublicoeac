@@ -1,44 +1,59 @@
 
-import React, { useState, useEffect, useCallback } from 'react';
-import { CalendarEvent, ViewMode, EVENT_DOT_COLORS } from './types';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
+import { CalendarEvent, EventType, ViewMode, EVENT_DOT_COLORS, EVENT_TYPE_LABELS } from './types';
 import { fetchPublicEvents } from './services/eventService';
 import CalendarGrid from './components/CalendarGrid';
 import ListView from './components/ListView';
 import DaySidebar from './components/DaySidebar';
 
-const AUTO_REFRESH_INTERVAL_MS = 60_000;
+const AUTO_REFRESH_INTERVAL_MS = 30 * 60_000;
 
 const App: React.FC = () => {
   const [currentDate, setCurrentDate] = useState(new Date());
   const [viewMode, setViewMode] = useState<ViewMode>('calendar');
   const [events, setEvents] = useState<CalendarEvent[]>([]);
   const [loading, setLoading] = useState(true);
+  const [isRefreshing, setIsRefreshing] = useState(false);
+  const [lastSyncAt, setLastSyncAt] = useState<Date | null>(null);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [selectedDay, setSelectedDay] = useState<number | null>(null);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const isFetchingRef = useRef(false);
 
   const currentYear = currentDate.getFullYear();
   const currentMonth = currentDate.getMonth();
 
-  const loadEvents = useCallback(async (silent = false) => {
+  const loadEvents = useCallback(async (silent = false, showError = true) => {
+    if (isFetchingRef.current) return;
+    isFetchingRef.current = true;
+
     if (!silent) {
       setLoading(true);
       setErrorMessage(null);
+    } else {
+      setIsRefreshing(true);
     }
 
     try {
       const data = await fetchPublicEvents(currentDate.getFullYear(), currentDate.getMonth());
       setEvents(data);
       setErrorMessage(null);
+      setLastSyncAt(new Date());
     } catch (error) {
-      if (!silent) {
+      if (!silent && showError) {
         setEvents([]);
         setErrorMessage(error instanceof Error ? error.message : 'Erro inesperado ao buscar eventos.');
+      } else if (showError) {
+        setErrorMessage(error instanceof Error ? error.message : 'Erro inesperado ao atualizar eventos.');
       }
       console.error('Erro ao buscar eventos:', error);
     } finally {
+      isFetchingRef.current = false;
+
       if (!silent) {
         setLoading(false);
+      } else {
+        setIsRefreshing(false);
       }
     }
   }, [currentDate]);
@@ -49,13 +64,17 @@ const App: React.FC = () => {
 
   useEffect(() => {
     const intervalId = window.setInterval(() => {
-      void loadEvents(true);
+      void loadEvents(true, false);
     }, AUTO_REFRESH_INTERVAL_MS);
 
     return () => {
       window.clearInterval(intervalId);
     };
   }, [loadEvents]);
+
+  const handleManualRefresh = () => {
+    void loadEvents(true, true);
+  };
 
   const changeYear = (offset: number) => {
     const newDate = new Date(currentDate.getFullYear() + offset, currentDate.getMonth(), 1);
@@ -76,10 +95,24 @@ const App: React.FC = () => {
     setIsSidebarOpen(true);
   };
 
+  const handleEventDetailsClick = (event: CalendarEvent) => {
+    const [, , dayString] = event.date.split('-');
+    const day = Number(dayString);
+
+    if (!Number.isNaN(day)) {
+      setSelectedDay(day);
+      setIsSidebarOpen(true);
+    }
+  };
+
   const months = [
     'Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 
     'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez'
   ];
+
+  const lastSyncLabel = lastSyncAt
+    ? lastSyncAt.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })
+    : '--:--';
 
   return (
     <div className="min-h-screen bg-[#f8fafc] font-sans antialiased text-slate-900 selection:bg-blue-100">
@@ -129,6 +162,19 @@ const App: React.FC = () => {
         
         {/* NAVEGAÇÃO DE DATA */}
         <div className="bg-white rounded-[32px] md:rounded-[48px] shadow-sm border border-slate-100 p-6 md:p-10 mb-8 overflow-hidden">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6 md:mb-8">
+            <p className="text-[10px] md:text-[11px] font-black uppercase tracking-[0.18em] text-slate-400">
+              Auto-refresh a cada 30 min • Última atualização: {lastSyncLabel}
+            </p>
+            <button
+              onClick={handleManualRefresh}
+              disabled={loading || isRefreshing}
+              className="self-start sm:self-auto px-5 py-2.5 rounded-xl bg-[#112760] text-white text-[10px] md:text-[11px] font-black uppercase tracking-[0.18em] disabled:opacity-50 disabled:cursor-not-allowed hover:bg-[#0b1f52] transition-colors"
+            >
+              {isRefreshing ? 'Atualizando...' : 'Atualizar agora'}
+            </button>
+          </div>
+
           <div className="flex items-center justify-center space-x-8 md:space-x-12 mb-8 md:mb-10">
             <button onClick={() => changeYear(-1)} className="p-3 md:p-4 text-[#112760] hover:bg-slate-50 rounded-full transition-all active:scale-75">
               <svg className="w-6 h-6 md:w-8 md:h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="4" d="M15 19l-7-7 7-7" /></svg>
@@ -154,10 +200,10 @@ const App: React.FC = () => {
 
         {/* LEGENDA DE CORES */}
         <div className="flex flex-wrap justify-center gap-3 md:gap-5 mb-10 md:mb-14 px-4">
-          {Object.entries(EVENT_DOT_COLORS).map(([type, colorClass]) => (
+          {(Object.entries(EVENT_DOT_COLORS) as [EventType, string][]).map(([type, colorClass]) => (
             <div key={type} className="flex items-center space-x-3 bg-white py-2.5 px-4 md:px-5 rounded-2xl border border-slate-100 shadow-sm transition-all hover:shadow-md hover:border-slate-200">
               <span className={`w-3.5 h-3.5 md:w-4 md:h-4 rounded-full ${colorClass} shadow-sm ring-2 ring-slate-50`}></span>
-              <span className="text-[9px] md:text-[11px] font-black uppercase tracking-widest text-slate-500 whitespace-nowrap">{type}</span>
+              <span className="text-[9px] md:text-[11px] font-black uppercase tracking-widest text-slate-500 whitespace-nowrap">{EVENT_TYPE_LABELS[type]}</span>
             </div>
           ))}
         </div>
@@ -182,7 +228,7 @@ const App: React.FC = () => {
                 selectedDay={selectedDay}
               />
             ) : (
-              <ListView events={events} />
+              <ListView events={events} onEventDetailsClick={handleEventDetailsClick} />
             )}
           </div>
         )}
