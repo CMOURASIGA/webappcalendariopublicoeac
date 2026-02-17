@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect, useCallback, useRef } from 'react';
+import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { CalendarEvent, EventType, ViewMode, EVENT_DOT_COLORS, EVENT_TYPE_LABELS } from './types';
 import { fetchPublicEvents } from './services/eventService';
 import CalendarGrid from './components/CalendarGrid';
@@ -7,11 +7,13 @@ import ListView from './components/ListView';
 import DaySidebar from './components/DaySidebar';
 
 const AUTO_REFRESH_INTERVAL_MS = 30 * 60_000;
+const ALL_EVENT_TYPES = Object.keys(EVENT_DOT_COLORS) as EventType[];
 
 const App: React.FC = () => {
   const [currentDate, setCurrentDate] = useState(new Date());
   const [viewMode, setViewMode] = useState<ViewMode>('calendar');
   const [events, setEvents] = useState<CalendarEvent[]>([]);
+  const [selectedTypes, setSelectedTypes] = useState<Set<EventType>>(() => new Set(ALL_EVENT_TYPES));
   const [loading, setLoading] = useState(true);
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [lastSyncAt, setLastSyncAt] = useState<Date | null>(null);
@@ -110,6 +112,26 @@ const App: React.FC = () => {
     'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez'
   ];
 
+  const filteredEvents = useMemo(() => {
+    return events.filter((event) => selectedTypes.has(event.type));
+  }, [events, selectedTypes]);
+
+  const toggleTypeFilter = (type: EventType) => {
+    setSelectedTypes((previous) => {
+      const next = new Set(previous);
+      if (next.has(type)) {
+        next.delete(type);
+      } else {
+        next.add(type);
+      }
+      return next;
+    });
+  };
+
+  const clearTypeFilters = () => {
+    setSelectedTypes(new Set(ALL_EVENT_TYPES));
+  };
+
   const lastSyncLabel = lastSyncAt
     ? lastSyncAt.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })
     : '--:--';
@@ -199,13 +221,32 @@ const App: React.FC = () => {
         </div>
 
         {/* LEGENDA DE CORES */}
-        <div className="flex flex-wrap justify-center gap-3 md:gap-5 mb-10 md:mb-14 px-4">
+        <div className="flex flex-wrap justify-center gap-3 md:gap-5 mb-5 md:mb-7 px-4">
           {(Object.entries(EVENT_DOT_COLORS) as [EventType, string][]).map(([type, colorClass]) => (
-            <div key={type} className="flex items-center space-x-3 bg-white py-2.5 px-4 md:px-5 rounded-2xl border border-slate-100 shadow-sm transition-all hover:shadow-md hover:border-slate-200">
+            <button
+              key={type}
+              onClick={() => toggleTypeFilter(type)}
+              className={`flex items-center space-x-3 py-2.5 px-4 md:px-5 rounded-2xl border shadow-sm transition-all ${
+                selectedTypes.has(type)
+                  ? 'bg-white border-slate-200 hover:shadow-md'
+                  : 'bg-slate-50 border-slate-100 opacity-50 hover:opacity-80'
+              }`}
+            >
               <span className={`w-3.5 h-3.5 md:w-4 md:h-4 rounded-full ${colorClass} shadow-sm ring-2 ring-slate-50`}></span>
               <span className="text-[9px] md:text-[11px] font-black uppercase tracking-widest text-slate-500 whitespace-nowrap">{EVENT_TYPE_LABELS[type]}</span>
-            </div>
+            </button>
           ))}
+        </div>
+        <div className="flex items-center justify-center gap-3 mb-10 md:mb-14">
+          <button
+            onClick={clearTypeFilters}
+            className="px-4 py-2 rounded-xl bg-slate-100 text-slate-600 text-[10px] font-black uppercase tracking-[0.18em] hover:bg-slate-200 transition-colors"
+          >
+            Limpar Filtros
+          </button>
+          <span className="text-[10px] md:text-[11px] font-black uppercase tracking-[0.18em] text-slate-400">
+            {filteredEvents.length} eventos visíveis
+          </span>
         </div>
 
         {loading ? (
@@ -223,12 +264,12 @@ const App: React.FC = () => {
             {viewMode === 'calendar' ? (
               <CalendarGrid 
                 currentDate={currentDate} 
-                events={events} 
+                events={filteredEvents} 
                 onDayClick={handleDayClick}
                 selectedDay={selectedDay}
               />
             ) : (
-              <ListView events={events} onEventDetailsClick={handleEventDetailsClick} />
+              <ListView events={filteredEvents} onEventDetailsClick={handleEventDetailsClick} />
             )}
           </div>
         )}
@@ -238,7 +279,7 @@ const App: React.FC = () => {
         isOpen={isSidebarOpen} 
         onClose={() => {setIsSidebarOpen(false); setSelectedDay(null);}}
         date={selectedDay ? new Date(currentDate.getFullYear(), currentDate.getMonth(), selectedDay) : null}
-        events={selectedDay ? events.filter(e => e.date === `${currentDate.getFullYear()}-${String(currentDate.getMonth() + 1).padStart(2, '0')}-${String(selectedDay).padStart(2, '0')}`) : []}
+        events={selectedDay ? filteredEvents.filter(e => e.date === `${currentDate.getFullYear()}-${String(currentDate.getMonth() + 1).padStart(2, '0')}-${String(selectedDay).padStart(2, '0')}`) : []}
       />
 
       <footer className="py-12 md:py-16 text-center">

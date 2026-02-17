@@ -29,17 +29,68 @@ const normalizeText = (value: string): string =>
     .toLowerCase()
     .trim();
 
+const includesAny = (text: string, candidates: string[]): boolean =>
+  candidates.some((candidate) => text.includes(candidate));
+
 const toEventType = (value: string): EventType => {
   const normalized = normalizeText(value);
 
-  if (normalized.includes('missa')) return 'Missa';
+  if (includesAny(normalized, ['tempo liturgico', 'advento', 'quaresma', 'tempo pascal', 'tempo comum'])) {
+    return 'Tempo Litúrgico';
+  }
+
+  if (
+    includesAny(normalized, [
+      'solenidade',
+      'pascoa',
+      'pentecostes',
+      'corpus christi',
+      'natal',
+      'ascensao do senhor',
+      'santissima trindade',
+    ])
+  ) {
+    return 'Solenidade';
+  }
+
+  if (
+    includesAny(normalized, [
+      'datas marianas',
+      'festa mariana',
+      'nossa senhora',
+      'imaculada conceicao',
+      'aparecida',
+      'assuncao de maria',
+      'maria mae de deus',
+    ])
+  ) {
+    return 'Datas Marianas';
+  }
+
+  if (
+    includesAny(normalized, [
+      'festa de santos',
+      'festa dos santos',
+      'sao ',
+      'santa ',
+      'santo ',
+      'apostolo',
+      'martir',
+    ])
+  ) {
+    return 'Festa de Santos';
+  }
+
+  if (includesAny(normalized, ['missa', 'celebracao eucaristica', 'eucaristia'])) return 'Missa';
   if (normalized.includes('pos-encontro') || normalized.includes('pos encontro')) return 'Pós-Encontro';
   if (normalized.includes('preparacao') && normalized.includes('encontro')) return 'Preparação Encontro';
   if (normalized.includes('circulo')) return 'Circulo';
   if (normalized.includes('cantina')) return 'Cantina';
   if (normalized.includes('reuniao')) return 'Reunião';
   if (normalized.includes('encontro')) return 'Encontro';
+  if (normalized.includes('pastoral')) return 'Outro';
 
+  // Compatibilidade: eventos antigos sem categoria litúrgica continuam como Pastoral.
   return 'Outro';
 };
 

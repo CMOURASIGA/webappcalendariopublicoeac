@@ -16,6 +16,10 @@ const ALL_TYPES: EventType[] = [
   'Missa',
   'Preparação Encontro',
   'Reunião',
+  'Tempo Litúrgico',
+  'Solenidade',
+  'Festa de Santos',
+  'Datas Marianas',
   'Outro'
 ];
 

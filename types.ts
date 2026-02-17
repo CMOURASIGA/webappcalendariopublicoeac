@@ -7,6 +7,10 @@ export type EventType =
   | 'Missa' 
   | 'Preparação Encontro'
   | 'Reunião'
+  | 'Tempo Litúrgico'
+  | 'Solenidade'
+  | 'Festa de Santos'
+  | 'Datas Marianas'
   | 'Outro';
 
 export interface CalendarEvent {
@@ -31,7 +35,11 @@ export const EVENT_TYPE_LABELS: Record<EventType, string> = {
   'Missa': 'Missa',
   'Preparação Encontro': 'Preparação',
   'Reunião': 'Reunião',
-  'Outro': 'Não EAC',
+  'Tempo Litúrgico': 'Tempo Litúrgico',
+  'Solenidade': 'Solenidade',
+  'Festa de Santos': 'Festa de Santos',
+  'Datas Marianas': 'Datas Marianas',
+  'Outro': 'Pastoral',
 };
 
 /**
@@ -47,6 +55,10 @@ export const EVENT_COLORS: Record<EventType, string> = {
   'Missa': 'bg-[#065f46] text-white border-[#065f46]',
   'Preparação Encontro': 'bg-[#991b1b] text-white border-[#991b1b]',
   'Reunião': 'bg-[#f1f5f9] text-[#475569] border-[#e2e8f0]',
+  'Tempo Litúrgico': 'bg-[#dbe4ef] text-[#334155] border-[#cbd5e1]',
+  'Solenidade': 'bg-[#7f1d1d] text-white border-[#7f1d1d]',
+  'Festa de Santos': 'bg-[#155e75] text-white border-[#155e75]',
+  'Datas Marianas': 'bg-[#ede9fe] text-[#6d28d9] border-[#ddd6fe]',
   'Outro': 'bg-[#111827] text-[#fde68a] border-[#facc15]',
 };
 
@@ -58,5 +70,9 @@ export const EVENT_DOT_COLORS: Record<EventType, string> = {
   'Missa': 'bg-[#10b981]',
   'Preparação Encontro': 'bg-[#ef4444]',
   'Reunião': 'bg-[#64748b]',
+  'Tempo Litúrgico': 'bg-[#94a3b8]',
+  'Solenidade': 'bg-[#7f1d1d]',
+  'Festa de Santos': 'bg-[#155e75]',
+  'Datas Marianas': 'bg-[#7c3aed]',
   'Outro': 'bg-[#facc15]',
 };
