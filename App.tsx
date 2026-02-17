@@ -1,36 +1,60 @@
 
 import React, { useState, useEffect, useCallback } from 'react';
-import { CalendarEvent, EventType, ViewMode, EVENT_DOT_COLORS } from './types';
+import { CalendarEvent, ViewMode, EVENT_DOT_COLORS } from './types';
 import { fetchPublicEvents } from './services/eventService';
 import CalendarGrid from './components/CalendarGrid';
 import ListView from './components/ListView';
 import DaySidebar from './components/DaySidebar';
+
+const AUTO_REFRESH_INTERVAL_MS = 60_000;
 
 const App: React.FC = () => {
   const [currentDate, setCurrentDate] = useState(new Date());
   const [viewMode, setViewMode] = useState<ViewMode>('calendar');
   const [events, setEvents] = useState<CalendarEvent[]>([]);
   const [loading, setLoading] = useState(true);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [selectedDay, setSelectedDay] = useState<number | null>(null);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
   const currentYear = currentDate.getFullYear();
   const currentMonth = currentDate.getMonth();
 
-  const loadEvents = useCallback(async () => {
-    setLoading(true);
+  const loadEvents = useCallback(async (silent = false) => {
+    if (!silent) {
+      setLoading(true);
+      setErrorMessage(null);
+    }
+
     try {
       const data = await fetchPublicEvents(currentDate.getFullYear(), currentDate.getMonth());
       setEvents(data);
+      setErrorMessage(null);
     } catch (error) {
+      if (!silent) {
+        setEvents([]);
+        setErrorMessage(error instanceof Error ? error.message : 'Erro inesperado ao buscar eventos.');
+      }
       console.error('Erro ao buscar eventos:', error);
     } finally {
-      setLoading(false);
+      if (!silent) {
+        setLoading(false);
+      }
     }
   }, [currentDate]);
 
   useEffect(() => {
-    loadEvents();
+    void loadEvents();
+  }, [loadEvents]);
+
+  useEffect(() => {
+    const intervalId = window.setInterval(() => {
+      void loadEvents(true);
+    }, AUTO_REFRESH_INTERVAL_MS);
+
+    return () => {
+      window.clearInterval(intervalId);
+    };
   }, [loadEvents]);
 
   const changeYear = (offset: number) => {
@@ -142,6 +166,11 @@ const App: React.FC = () => {
           <div className="flex flex-col items-center justify-center h-[300px] md:h-[500px]">
             <div className="w-12 h-12 md:w-16 md:h-16 border-[5px] md:border-[7px] border-[#112760]/10 border-t-[#112760] rounded-full animate-spin"></div>
             <span className="mt-8 font-black text-slate-400 uppercase text-[10px] md:text-[12px] tracking-[0.4em] animate-pulse">Sincronizando Agenda</span>
+          </div>
+        ) : errorMessage ? (
+          <div className="bg-red-50 border border-red-200 rounded-[32px] p-6 md:p-8 text-red-800">
+            <h3 className="text-sm md:text-base font-black uppercase tracking-[0.12em] mb-3">Falha na sincronização com a planilha</h3>
+            <p className="text-sm leading-relaxed">{errorMessage}</p>
           </div>
         ) : (
           <div className="animate-in fade-in slide-in-from-bottom-8 duration-700 ease-out">

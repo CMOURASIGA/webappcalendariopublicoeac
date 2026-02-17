@@ -1,44 +1,142 @@
-
 import { CalendarEvent, EventType } from '../types';
 
-export const fetchPublicEvents = async (year: number, month: number): Promise<CalendarEvent[]> => {
-  await new Promise(resolve => setTimeout(resolve, 800));
+interface AppsScriptEvent {
+  id?: string;
+  atividade?: string;
+  tipo?: string;
+  inicio?: string;
+  termino?: string;
+  local?: string;
+  proprietario?: string;
+  status?: string;
+}
 
-  const types: EventType[] = [
-    'Encontro', 'Cantina', 'Circulo', 'Pós-Encontro', 'Missa', 'Preparação Encontro', 'Reunião', 'Outro'
-  ];
+interface AppsScriptEventsResponse {
+  ok?: boolean;
+  events?: AppsScriptEvent[];
+  error?: string;
+}
 
-  const events: CalendarEvent[] = [];
-  const daysInMonth = new Date(year, month + 1, 0).getDate();
+interface ParsedDateTime {
+  date: string;
+  time?: string;
+}
 
-  for (let i = 1; i <= daysInMonth; i++) {
-    // Dias com múltiplos eventos para testar a lógica das bolinhas (+X)
-    if (i % 4 === 0) {
-      const date = `${year}-${String(month + 1).padStart(2, '0')}-${String(i).padStart(2, '0')}`;
-      
-      // Adiciona 6 eventos em um único dia para testar o "+2" (4 bolas + 2)
-      for (let j = 0; j < 6; j++) {
-        events.push({
-          id: `event-${year}-${month}-${i}-${j}`,
-          title: `${types[j % types.length]} - Atividade ${j + 1}`,
-          date: date,
-          type: types[j % types.length],
-          startTime: `${14 + j}:00`,
-          location: 'Centro Pastoral',
-          description: 'Detalhes da atividade programada no cronograma oficial do EAC.'
-        });
-      }
-    } else if (i % 5 === 0) {
-      events.push({
-        id: `event-${year}-${month}-${i}-single`,
-        title: `Missa Comunitária`,
-        date: `${year}-${String(month + 1).padStart(2, '0')}-${String(i).padStart(2, '0')}`,
-        type: 'Missa',
-        startTime: '19:30',
-        location: 'Igreja Matriz'
-      });
-    }
+const normalizeText = (value: string): string =>
+  value
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .toLowerCase()
+    .trim();
+
+const toEventType = (value: string): EventType => {
+  const normalized = normalizeText(value);
+
+  if (normalized.includes('missa')) return 'Missa';
+  if (normalized.includes('pos-encontro') || normalized.includes('pos encontro')) return 'Pós-Encontro';
+  if (normalized.includes('preparacao') && normalized.includes('encontro')) return 'Preparação Encontro';
+  if (normalized.includes('circulo')) return 'Circulo';
+  if (normalized.includes('cantina')) return 'Cantina';
+  if (normalized.includes('reuniao')) return 'Reunião';
+  if (normalized.includes('encontro')) return 'Encontro';
+
+  return 'Outro';
+};
+
+const parseDateTime = (rawValue: string): ParsedDateTime | null => {
+  const value = rawValue.trim();
+  if (!value) return null;
+
+  const brazilianDateMatch = value.match(
+    /^(\d{2})\/(\d{2})\/(\d{4})(?:\s+(\d{2}):(\d{2})(?::(\d{2}))?)?$/
+  );
+
+  if (brazilianDateMatch) {
+    const [, day, month, year, hour = '00', minute = '00'] = brazilianDateMatch;
+    return {
+      date: `${year}-${month}-${day}`,
+      time: `${hour}:${minute}`,
+    };
   }
 
-  return events;
+  const isoDateMatch = value.match(
+    /^(\d{4})-(\d{2})-(\d{2})(?:[T\s](\d{2}):(\d{2})(?::\d{2})?)?$/
+  );
+
+  if (isoDateMatch) {
+    const [, year, month, day, hour = '00', minute = '00'] = isoDateMatch;
+    return {
+      date: `${year}-${month}-${day}`,
+      time: `${hour}:${minute}`,
+    };
+  }
+
+  return null;
+};
+
+const mapAppsScriptEvents = (events: AppsScriptEvent[]): CalendarEvent[] =>
+  events
+    .map((event, index) => {
+      const title = String(event.atividade || '').trim();
+      const parsedStart = parseDateTime(String(event.inicio || '').trim());
+      const parsedEnd = parseDateTime(String(event.termino || '').trim());
+
+      if (!title || !parsedStart) return null;
+
+      const owner = String(event.proprietario || '').trim();
+      const status = String(event.status || '').trim();
+      const descriptionParts: string[] = [];
+      if (owner) descriptionParts.push(`Proprietário: ${owner}`);
+      if (status) descriptionParts.push(`Status: ${status}`);
+
+      return {
+        id: String(event.id || `ev-${index}`),
+        title,
+        date: parsedStart.date,
+        startTime: parsedStart.time,
+        endTime: parsedEnd?.time,
+        location: String(event.local || '').trim() || undefined,
+        description: descriptionParts.length > 0 ? descriptionParts.join(' | ') : undefined,
+        type: toEventType(String(event.tipo || title)),
+      } as CalendarEvent;
+    })
+    .filter((event): event is CalendarEvent => Boolean(event));
+
+const fetchEventsFromAppsScript = async (endpointUrl: string): Promise<CalendarEvent[]> => {
+  const response = await fetch(endpointUrl, {
+    method: 'POST',
+    body: JSON.stringify({
+      action: 'GET_EVENTS',
+      payload: {},
+    }),
+  });
+
+  if (!response.ok) {
+    const errorBody = await response.text();
+    throw new Error(`Falha ao consultar endpoint Apps Script (HTTP ${response.status}). Resposta: ${errorBody}`);
+  }
+
+  const payload = (await response.json()) as AppsScriptEventsResponse;
+  if (!payload.ok) {
+    throw new Error(payload.error || 'Resposta inválida do Apps Script.');
+  }
+
+  return mapAppsScriptEvents(payload.events ?? []);
+};
+
+export const fetchPublicEvents = async (year: number, month: number): Promise<CalendarEvent[]> => {
+  const endpointUrl = import.meta.env.VITE_APPS_SCRIPT_URL?.trim();
+
+  if (!endpointUrl) {
+    throw new Error('Defina VITE_APPS_SCRIPT_URL no arquivo .env.local.');
+  }
+
+  const allEvents = await fetchEventsFromAppsScript(endpointUrl);
+
+  return allEvents
+    .filter((event) => {
+      const [eventYear, eventMonth] = event.date.split('-').map(Number);
+      return eventYear === year && eventMonth === month + 1;
+    })
+    .sort((a, b) => `${a.date} ${a.startTime ?? ''}`.localeCompare(`${b.date} ${b.startTime ?? ''}`));
 };

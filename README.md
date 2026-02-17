@@ -1,20 +1,34 @@
-<div align="center">
-<img width="1200" height="475" alt="GHBanner" src="https://github.com/user-attachments/assets/0aa67016-6eaf-458a-adb2-6e31a0763ed6" />
-</div>
+# Calendário Público EAC
 
-# Run and deploy your AI Studio app
+Aplicação React/Vite para exibir eventos usando um endpoint publicado no Google Apps Script.
 
-This contains everything you need to run your app locally.
+## Pré-requisitos
 
-View your app in AI Studio: https://ai.studio/apps/drive/1fU4TE6Hox66FM6l0lREFjdVxPOuoP2PT
+1. Node.js 20+.
+2. Um Web App do Google Apps Script publicado com acesso liberado.
+3. A action `GET_EVENTS` disponível no `doPost`.
 
-## Run Locally
+## Configuração
 
-**Prerequisites:**  Node.js
-
-
-1. Install dependencies:
+1. Instale as dependências:
    `npm install`
-2. Set the `GEMINI_API_KEY` in [.env.local](.env.local) to your Gemini API key
-3. Run the app:
+2. Copie `.env.example` para `.env`.
+3. Preencha as variáveis:
+   `VITE_APPS_SCRIPT_URL=https://script.google.com/macros/s/SEU_DEPLOY_ID/exec`
+4. Execute:
    `npm run dev`
+
+## Contrato esperado do endpoint
+
+O frontend envia:
+1. `POST` para `VITE_APPS_SCRIPT_URL`
+2. Body JSON: `{ "action": "GET_EVENTS", "payload": {} }`
+
+A resposta esperada:
+1. `{ "ok": true, "events": [...] }`
+2. Campos de cada evento: `id`, `atividade`, `tipo`, `inicio`, `termino`, `local`, `proprietario`, `status`
+
+## Sobre GOOGLE_CREDENTIALS
+
+- `GOOGLE_CREDENTIALS` não deve ser exposto no frontend.
+- Se você usar Apps Script como proxy, as credenciais ficam no próprio Apps Script/projeto Google, não no browser.
