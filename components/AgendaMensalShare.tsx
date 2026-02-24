@@ -27,8 +27,49 @@ const AgendaMensalShare: React.FC<Props> = ({ mes, ano, eventos }) => {
     });
   }, [eventos]);
 
+  const totalEvents = sortedEvents.length;
+  const densityMode: 'few' | 'medium' | 'many' = totalEvents >= 7
+    ? 'many'
+    : totalEvents >= 4
+      ? 'medium'
+      : 'few';
+  const isFew = densityMode === 'few';
+  const isMany = densityMode === 'many';
+
+  const cardGapClass = isFew ? 'gap-7' : isMany ? 'gap-5' : 'gap-6';
+  const cardClass = isFew
+    ? 'rounded-[36px] border border-[#014373]/15 bg-white/95 p-7 shadow-[0_14px_30px_rgba(9,50,92,0.10)] min-h-[190px]'
+    : isMany
+      ? 'rounded-[30px] border border-[#014373]/14 bg-white/95 p-5 shadow-[0_10px_22px_rgba(9,50,92,0.10)] min-h-[146px]'
+      : 'rounded-[32px] border border-[#014373]/15 bg-white/95 p-6 shadow-[0_12px_28px_rgba(9,50,92,0.10)] min-h-[156px]';
+  const dayClass = isFew
+    ? 'w-16 shrink-0 text-[60px] leading-none font-black text-[#014373] tabular-nums'
+    : isMany
+      ? 'w-12 shrink-0 text-[46px] leading-none font-black text-[#014373] tabular-nums'
+      : 'w-14 shrink-0 text-[52px] leading-none font-black text-[#014373] tabular-nums';
+  const titleClass = isFew
+    ? 'text-[31px] leading-tight font-black text-[#09325C]'
+    : isMany
+      ? 'text-[25px] leading-tight font-black text-[#09325C]'
+      : 'text-[27px] leading-tight font-black text-[#09325C]';
+  const timeClass = isFew
+    ? 'mt-2 text-[20px] font-semibold text-slate-500 uppercase'
+    : isMany
+      ? 'mt-1.5 text-[17px] font-semibold text-slate-500 uppercase'
+      : 'mt-2 text-[19px] font-semibold text-slate-500 uppercase';
+  const badgeClass = isFew
+    ? 'mt-4 inline-flex rounded-full px-[18px] py-1.5 text-[16px] font-black uppercase tracking-[0.06em]'
+    : isMany
+      ? 'mt-3 inline-flex rounded-full px-4 py-1 text-[14px] font-black uppercase tracking-[0.06em]'
+      : 'mt-4 inline-flex rounded-full px-4 py-1.5 text-[16px] font-black uppercase tracking-[0.06em]';
+  const contentTopClass = isFew ? 'min-w-0 pt-1' : isMany ? 'min-w-0 pt-0' : 'min-w-0 pt-0.5';
+  const mainTopClass = isFew ? 'pt-14' : isMany ? 'pt-8' : 'pt-10';
+
   const eventRows = Math.max(Math.ceil(sortedEvents.length / 2), 1);
-  const dynamicHeight = Math.max(1350, 680 + (eventRows * 190) + ((eventRows - 1) * 24));
+  const baseHeight = isFew ? 760 : isMany ? 650 : 680;
+  const rowHeight = isFew ? 214 : isMany ? 170 : 190;
+  const rowGap = isFew ? 28 : isMany ? 20 : 24;
+  const dynamicHeight = Math.max(1350, baseHeight + (eventRows * rowHeight) + ((eventRows - 1) * rowGap));
   const monthLabel = mes.toUpperCase();
 
   return (
@@ -75,7 +116,7 @@ const AgendaMensalShare: React.FC<Props> = ({ mes, ano, eventos }) => {
         </div>
       </header>
 
-      <main className="px-14 pt-10 pb-[300px]">
+      <main className={`px-14 pb-[300px] ${mainTopClass}`}>
         <div className="mb-6 flex justify-end">
           <div
             className="rotate-[-7deg] rounded-2xl px-7 py-3 shadow-[0_10px_20px_rgba(9,50,92,0.18)]"
@@ -87,7 +128,7 @@ const AgendaMensalShare: React.FC<Props> = ({ mes, ano, eventos }) => {
           </div>
         </div>
 
-        <div className="grid grid-cols-2 gap-6">
+        <div className={`grid grid-cols-2 ${cardGapClass} ${isFew ? 'mx-auto w-[96%]' : 'w-full'}`}>
           {sortedEvents.length === 0 ? (
             <div className="col-span-2 rounded-3xl border border-[#d1dbe7] bg-white p-10 shadow-sm text-center">
               <p className="text-[28px] font-black uppercase tracking-[0.08em] text-[#09325C]">
@@ -98,23 +139,23 @@ const AgendaMensalShare: React.FC<Props> = ({ mes, ano, eventos }) => {
             sortedEvents.map((evento, index) => (
               <article
                 key={`${evento.dia}-${evento.titulo}-${index}`}
-                className="rounded-[32px] border border-[#014373]/15 bg-white/95 p-6 shadow-[0_12px_28px_rgba(9,50,92,0.10)] min-h-[156px]"
+                className={`${cardClass} ${isFew && (totalEvents % 2 === 1) && index === totalEvents - 1 ? 'col-span-2 mx-auto w-[80%]' : ''}`}
               >
                 <div className="flex gap-5">
-                  <span className="w-14 shrink-0 text-[52px] leading-none font-black text-[#014373] tabular-nums">
+                  <span className={dayClass}>
                     {String(evento.dia).padStart(2, '0')}
                   </span>
-                  <div className="min-w-0 pt-0.5">
-                    <h2 className="text-[27px] leading-tight font-black text-[#09325C]">
+                  <div className={contentTopClass}>
+                    <h2 className={titleClass}>
                       {truncate(evento.titulo, 48)}
                     </h2>
                     {evento.horario ? (
-                      <p className="mt-2 text-[19px] font-semibold text-slate-500 uppercase">
+                      <p className={timeClass}>
                         {evento.horario}
                       </p>
                     ) : null}
                     <span
-                      className="mt-4 inline-flex rounded-full px-4 py-1.5 text-[16px] font-black uppercase tracking-[0.06em]"
+                      className={badgeClass}
                       style={{ backgroundColor: EAC_COLORS.primaryDark, color: '#FFFFFF' }}
                     >
                       {truncate(evento.tipo, 24)}
