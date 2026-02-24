@@ -2,10 +2,12 @@
 import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { CalendarEvent, EventType, ViewMode, EVENT_DOT_COLORS, EVENT_TYPE_LABELS } from './types';
 import { fetchPublicEvents } from './services/eventService';
+import { compartilharAgendaOuBaixar } from './services/imageExport';
 import CalendarGrid from './components/CalendarGrid';
 import ListView from './components/ListView';
 import DaySidebar from './components/DaySidebar';
 import HelpModal from './components/HelpModal';
+import AgendaMensalShare, { type Evento as EventoAgendaShare } from './components/AgendaMensalShare';
 
 const AUTO_REFRESH_INTERVAL_MS = 30 * 60_000;
 const ALL_EVENT_TYPES = Object.keys(EVENT_DOT_COLORS) as EventType[];
@@ -22,7 +24,9 @@ const App: React.FC = () => {
   const [selectedDay, setSelectedDay] = useState<number | null>(null);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [isHelpOpen, setIsHelpOpen] = useState(false);
+  const [isSharingAgenda, setIsSharingAgenda] = useState(false);
   const isFetchingRef = useRef(false);
+  const shareCardRef = useRef<HTMLDivElement | null>(null);
 
   const currentYear = currentDate.getFullYear();
   const currentMonth = currentDate.getMonth();
@@ -80,6 +84,20 @@ const App: React.FC = () => {
     void loadEvents(true, true);
   };
 
+  const handleShareAgenda = useCallback(async () => {
+    if (isSharingAgenda) return;
+    if (!shareCardRef.current) return;
+
+    setIsSharingAgenda(true);
+    try {
+      await compartilharAgendaOuBaixar(shareCardRef.current);
+    } catch (error) {
+      console.error('Erro ao compartilhar agenda:', error);
+    } finally {
+      setIsSharingAgenda(false);
+    }
+  }, [isSharingAgenda]);
+
   const changeYear = (offset: number) => {
     const newDate = new Date(currentDate.getFullYear() + offset, currentDate.getMonth(), 1);
     setCurrentDate(newDate);
@@ -124,6 +142,60 @@ const App: React.FC = () => {
   const filteredEvents = useMemo(() => {
     return events.filter((event) => selectedTypes.has(event.type));
   }, [events, selectedTypes]);
+
+  const agendaShareEvents = useMemo<EventoAgendaShare[]>(() => {
+    const activeYear = currentDate.getFullYear();
+    const activeMonth = currentDate.getMonth() + 1;
+    const uniqueEvents = new Map<string, EventoAgendaShare>();
+
+    for (const event of filteredEvents) {
+      const [yearString, monthString, dayString] = event.date.split('-');
+      const eventYear = Number(yearString);
+      const eventMonth = Number(monthString);
+      const eventDay = Number(dayString);
+
+      if (
+        Number.isNaN(eventYear)
+        || Number.isNaN(eventMonth)
+        || Number.isNaN(eventDay)
+        || eventYear !== activeYear
+        || eventMonth !== activeMonth
+      ) {
+        continue;
+      }
+
+      const horario = event.startTime
+        ? `${event.startTime}${event.endTime ? ` - ${event.endTime}` : ''}`
+        : undefined;
+
+      const mapped: EventoAgendaShare = {
+        dia: eventDay,
+        titulo: event.title.trim(),
+        tipo: event.type.trim(),
+        horario: horario?.trim(),
+      };
+
+      const dedupeKey = [
+        mapped.dia,
+        mapped.titulo.toLocaleLowerCase('pt-BR'),
+        mapped.tipo.toLocaleLowerCase('pt-BR'),
+        (mapped.horario ?? '').toLocaleLowerCase('pt-BR'),
+      ].join('|');
+
+      if (!uniqueEvents.has(dedupeKey)) {
+        uniqueEvents.set(dedupeKey, mapped);
+      }
+    }
+
+    return Array.from(uniqueEvents.values()).sort((a, b) => {
+      if (a.dia !== b.dia) return a.dia - b.dia;
+      if ((a.horario ?? '') !== (b.horario ?? '')) {
+        return (a.horario ?? '').localeCompare(b.horario ?? '', 'pt-BR');
+      }
+      if (a.titulo !== b.titulo) return a.titulo.localeCompare(b.titulo, 'pt-BR');
+      return a.tipo.localeCompare(b.tipo, 'pt-BR');
+    });
+  }, [currentDate, filteredEvents]);
 
   const toggleTypeFilter = (type: EventType) => {
     setSelectedTypes((previous) => {
@@ -206,13 +278,22 @@ const App: React.FC = () => {
               <p className="text-[9px] md:text-[11px] font-black uppercase tracking-[0.16em] text-slate-400">
                 Auto-refresh 30 min • Última atualização: {lastSyncLabel}
               </p>
-              <button
-                onClick={handleManualRefresh}
-                disabled={loading || isRefreshing}
-                className="w-full md:w-auto px-4 py-2.5 rounded-xl bg-[#112760] text-white text-[10px] md:text-[11px] font-black uppercase tracking-[0.18em] disabled:opacity-50 disabled:cursor-not-allowed hover:bg-[#0b1f52] transition-colors"
-              >
-                {isRefreshing ? 'Atualizando...' : 'Atualizar agora'}
-              </button>
+              <div className="w-full md:w-auto flex flex-col sm:flex-row gap-2">
+                <button
+                  onClick={handleShareAgenda}
+                  disabled={loading || isSharingAgenda || Boolean(errorMessage)}
+                  className="w-full md:w-auto px-4 py-2.5 rounded-xl bg-[#014373] text-white text-[10px] md:text-[11px] font-black uppercase tracking-[0.14em] disabled:opacity-50 disabled:cursor-not-allowed hover:bg-[#09325C] transition-colors"
+                >
+                  {isSharingAgenda ? 'Gerando imagem...' : 'Compartilhar agenda do mês'}
+                </button>
+                <button
+                  onClick={handleManualRefresh}
+                  disabled={loading || isRefreshing}
+                  className="w-full md:w-auto px-4 py-2.5 rounded-xl bg-[#112760] text-white text-[10px] md:text-[11px] font-black uppercase tracking-[0.18em] disabled:opacity-50 disabled:cursor-not-allowed hover:bg-[#0b1f52] transition-colors"
+                >
+                  {isRefreshing ? 'Atualizando...' : 'Atualizar agora'}
+                </button>
+              </div>
             </div>
 
             <div className="md:hidden flex items-center justify-between mb-4 bg-slate-50 rounded-2xl p-2.5">
@@ -339,6 +420,16 @@ const App: React.FC = () => {
           </>
         )}
       </main>
+
+      <div className="fixed -left-[9999px] top-0 opacity-0 pointer-events-none" aria-hidden="true">
+        <div ref={shareCardRef}>
+          <AgendaMensalShare
+            mes={currentMonthLabel}
+            ano={currentYear}
+            eventos={agendaShareEvents}
+          />
+        </div>
+      </div>
 
       <DaySidebar 
         isOpen={isSidebarOpen} 

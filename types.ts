@@ -27,6 +27,14 @@ export interface CalendarEvent {
 
 export type ViewMode = 'calendar' | 'list';
 
+export const EAC_COLORS = {
+  primary: "#014373",
+  primaryDark: "#09325C",
+  light: "#F0EFE9",
+  accent: "#CF1526",
+  neutral: "#90A0B1"
+} as const;
+
 export const EVENT_TYPE_LABELS: Record<EventType, string> = {
   'Encontro': 'Encontro',
   'Cantina': 'Cantina',
