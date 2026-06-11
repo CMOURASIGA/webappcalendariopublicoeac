@@ -1,0 +1,5 @@
+{
+  "name": "Calendário Público de Eventos",
+  "description": "Uma agenda pública e interativa para visualização de eventos com filtros por categoria e alternância entre visualização de calendário e lista.",
+  "requestFramePermissions": []
+}
