@@ -1,7 +1,10 @@
 /// <reference types="vite/client" />
 
 interface ImportMetaEnv {
-  readonly VITE_APPS_SCRIPT_URL?: string;
+  readonly VITE_SUPABASE_URL?: string;
+  readonly VITE_SUPABASE_ANON_KEY?: string;
+  readonly VITE_SUPABASE_SCHEMA?: string;
+  readonly VITE_SUPABASE_EVENTS_VIEW?: string;
 }
 
 interface ImportMeta {

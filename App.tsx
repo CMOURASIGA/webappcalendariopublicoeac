@@ -1,7 +1,7 @@
 ﻿
 import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { CalendarEvent, EventType, ViewMode, EVENT_DOT_COLORS, EVENT_TYPE_LABELS, isLiturgicalEventType } from './types';
-import { fetchPublicEvents } from './services/eventService';
+import { fetchPublicEvents } from './services/supabaseEventService';
 import { compartilharAgendaOuBaixar } from './services/imageExport';
 import CalendarGrid from './components/CalendarGridEnhanced';
 import ListView from './components/ListViewEnhanced';
@@ -453,11 +453,11 @@ const App: React.FC = () => {
               {loading ? (
                 <div className="flex flex-col items-center justify-center h-[300px] md:h-[500px]">
                   <div className="w-12 h-12 md:w-16 md:h-16 border-[5px] md:border-[7px] border-[#112760]/10 border-t-[#112760] rounded-full animate-spin"></div>
-                  <span className="mt-8 font-black text-slate-400 uppercase text-[10px] md:text-[12px] tracking-[0.4em] animate-pulse">Sincronizando Agenda</span>
+                  <span className="mt-8 font-black text-slate-400 uppercase text-[10px] md:text-[12px] tracking-[0.4em] animate-pulse">Sincronizando agenda</span>
                 </div>
               ) : errorMessage ? (
                 <div className="bg-red-50 border border-red-200 rounded-[32px] p-6 md:p-8 text-red-800">
-                  <h3 className="text-sm md:text-base font-black uppercase tracking-[0.12em] mb-3">Falha na sincronização com a planilha</h3>
+                  <h3 className="text-sm md:text-base font-black uppercase tracking-[0.12em] mb-3">Falha na sincronizacao com o calendario publico</h3>
                   <p className="text-sm leading-relaxed">{errorMessage}</p>
                 </div>
               ) : (
