@@ -11,10 +11,16 @@ import AgendaMensalShare, { type Evento as EventoAgendaShare } from './component
 
 const AUTO_REFRESH_INTERVAL_MS = 30 * 60_000;
 const ALL_EVENT_TYPES = Object.keys(EVENT_DOT_COLORS) as EventType[];
+const MOBILE_MEDIA_QUERY = '(max-width: 767px)';
 
 const App: React.FC = () => {
   const [currentDate, setCurrentDate] = useState(new Date());
-  const [viewMode, setViewMode] = useState<ViewMode>('calendar');
+  const [isMobile, setIsMobile] = useState(() =>
+    typeof window !== 'undefined' ? window.matchMedia(MOBILE_MEDIA_QUERY).matches : false
+  );
+  const [viewMode, setViewMode] = useState<ViewMode>(() =>
+    typeof window !== 'undefined' && window.matchMedia(MOBILE_MEDIA_QUERY).matches ? 'list' : 'calendar'
+  );
   const [events, setEvents] = useState<CalendarEvent[]>([]);
   const [selectedTypes, setSelectedTypes] = useState<Set<EventType>>(() => new Set(ALL_EVENT_TYPES));
   const [loading, setLoading] = useState(true);
@@ -79,6 +85,25 @@ const App: React.FC = () => {
       window.clearInterval(intervalId);
     };
   }, [loadEvents]);
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+
+    const mediaQuery = window.matchMedia(MOBILE_MEDIA_QUERY);
+    const handleMediaChange = (event: MediaQueryListEvent) => {
+      setIsMobile(event.matches);
+    };
+
+    setIsMobile(mediaQuery.matches);
+
+    if (typeof mediaQuery.addEventListener === 'function') {
+      mediaQuery.addEventListener('change', handleMediaChange);
+      return () => mediaQuery.removeEventListener('change', handleMediaChange);
+    }
+
+    mediaQuery.addListener(handleMediaChange);
+    return () => mediaQuery.removeListener(handleMediaChange);
+  }, []);
 
   const handleManualRefresh = () => {
     void loadEvents(true, true);
@@ -260,12 +285,12 @@ const App: React.FC = () => {
             </button>
           </div>
 
-          <div className="mt-3 md:mt-4 flex items-center justify-between gap-3">
-            <h1 className="text-[12px] md:text-lg font-black uppercase tracking-[0.2em] md:tracking-[0.3em] leading-tight border-b border-white/15 pb-1 flex-1 min-w-0 truncate">
+          <div className="mt-3 md:mt-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+            <h1 className="text-[12px] md:text-lg font-black uppercase tracking-[0.16em] md:tracking-[0.3em] leading-tight border-b border-white/15 pb-1 flex-1 min-w-0">
               {isHelpOpen ? 'Ajuda do Calendário' : 'Calendário de Eventos'}
             </h1>
 
-            <div className={`flex bg-[#1e3a8a]/50 p-1 rounded-full border border-white/10 shrink-0 backdrop-blur-md ${isHelpOpen ? 'opacity-40 pointer-events-none' : ''}`}>
+            <div className={`grid grid-cols-2 bg-[#1e3a8a]/50 p-1 rounded-full border border-white/10 shrink-0 backdrop-blur-md w-full sm:w-auto ${isHelpOpen ? 'opacity-40 pointer-events-none' : ''}`}>
               <button
                 onClick={() => setViewMode('calendar')}
                 className={`px-4 md:px-6 py-2 text-[10px] md:text-[11px] font-black uppercase tracking-widest rounded-full transition-all duration-300 ${viewMode === 'calendar' ? 'bg-white text-[#112760] shadow-xl' : 'text-white/60 hover:text-white'}`}
@@ -312,7 +337,7 @@ const App: React.FC = () => {
               </div>
             </div>
 
-            <div className="md:hidden flex items-center justify-between mb-4 bg-slate-50 rounded-2xl p-2.5">
+            <div className="md:hidden flex items-center justify-between mb-3 bg-slate-50 rounded-2xl p-2.5">
               <button
                 onClick={() => changeMonthByOffset(-1)}
                 className="p-2 text-[#112760] rounded-xl hover:bg-slate-100 transition-colors"
@@ -343,12 +368,12 @@ const App: React.FC = () => {
               </button>
             </div>
 
-            <div className="md:hidden flex gap-2 overflow-x-auto pb-1 [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden">
+            <div className="md:hidden -mx-1 px-1 flex gap-2 overflow-x-auto pb-1 [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden snap-x snap-mandatory">
               {months.map((month, index) => (
                 <button
                   key={`mobile-month-${month}`}
                   onClick={() => setMonth(index)}
-                  className={`shrink-0 px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-[0.16em] transition-all ${
+                  className={`shrink-0 snap-start min-w-[72px] px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-[0.16em] transition-all ${
                     currentMonth === index ? 'bg-[#112760] text-white shadow' : 'bg-slate-50 text-slate-400'
                   }`}
                 >
@@ -374,7 +399,7 @@ const App: React.FC = () => {
             <div className="order-2">
               {/* LEGENDA DE CORES */}
               <div className="mb-3 md:mb-7">
-                <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-2 md:gap-3 px-1 md:px-4">
+                <div className="grid grid-cols-2 lg:grid-cols-4 gap-2 md:gap-3 px-1 md:px-4">
                   {(Object.entries(EVENT_DOT_COLORS) as [EventType, string][]).map(([type, colorClass]) => (
                     <button
                       key={type}
@@ -404,6 +429,16 @@ const App: React.FC = () => {
                   {filteredEvents.length} eventos visíveis
                 </span>
               </div>
+              {isMobile && (
+                <div className="mb-4 rounded-2xl border border-blue-100 bg-blue-50/70 px-4 py-3 text-center">
+                  <p className="text-[10px] font-black uppercase tracking-[0.18em] text-[#112760]">
+                    No celular a visualização inicial é em lista
+                  </p>
+                  <p className="mt-1 text-[11px] text-slate-500">
+                    Use `Grade` para visão rápida do mês e toque no dia para abrir os detalhes.
+                  </p>
+                </div>
+              )}
               <div className="flex flex-wrap items-center justify-center gap-2 md:gap-3 mb-5 md:mb-8">
                 <span className="px-3 py-2 rounded-xl bg-[#cf1526]/10 text-[#a61120] border border-[#cf1526]/15 text-[10px] font-black uppercase tracking-[0.14em]">
                   {eventContextSummary.commitments} compromissos EAC

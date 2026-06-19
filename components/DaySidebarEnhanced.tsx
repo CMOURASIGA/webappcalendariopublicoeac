@@ -43,6 +43,9 @@ const DaySidebarEnhanced: React.FC<DaySidebarProps> = ({ isOpen, onClose, date, 
       <aside
         className={`fixed right-0 bottom-0 md:top-0 h-[85vh] md:h-full w-full md:w-[500px] bg-white z-[80] shadow-[0_0_100px_rgba(0,0,0,0.2)] transform transition-transform duration-500 ease-in-out flex flex-col rounded-t-[40px] md:rounded-t-none md:rounded-l-[40px] overflow-hidden ${isOpen ? 'translate-y-0 md:translate-x-0' : 'translate-y-full md:translate-y-0 md:translate-x-full'}`}
       >
+        <div className="md:hidden flex justify-center bg-[#112760] pt-3">
+          <div className="h-1.5 w-14 rounded-full bg-white/35" />
+        </div>
         <div className="p-8 pb-10 border-b border-white/10 flex items-center justify-between bg-[#112760] text-white">
           <div className="animate-in slide-in-from-left-4 duration-700">
             <h3 className="text-2xl font-black uppercase tracking-tight">
@@ -50,6 +53,9 @@ const DaySidebarEnhanced: React.FC<DaySidebarProps> = ({ isOpen, onClose, date, 
             </h3>
             <p className="text-xs opacity-70 font-black uppercase tracking-[0.2em] mt-2">
               {date?.toLocaleDateString('pt-BR', { weekday: 'long' })}
+            </p>
+            <p className="mt-3 inline-flex rounded-full bg-white/10 px-3 py-1 text-[10px] font-black uppercase tracking-[0.16em] text-white/85">
+              {events.length} item{events.length === 1 ? '' : 's'} no dia
             </p>
           </div>
           <button

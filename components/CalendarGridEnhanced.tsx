@@ -25,9 +25,11 @@ const CalendarGridEnhanced: React.FC<CalendarGridProps> = ({ currentDate, events
   };
 
   const weekDays = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sab'];
+  const today = new Date();
+  const todayKey = today.toDateString();
 
   return (
-    <div className="bg-white rounded-[40px] shadow-2xl shadow-slate-200 border border-slate-100 overflow-hidden ring-1 ring-slate-100">
+    <div className="bg-white rounded-[28px] md:rounded-[40px] shadow-2xl shadow-slate-200 border border-slate-100 overflow-hidden ring-1 ring-slate-100">
       <div className="grid grid-cols-7 bg-slate-50/50 border-b border-slate-100">
         {weekDays.map((day) => (
           <div key={day} className="py-3 md:py-6 text-center text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">
@@ -37,7 +39,82 @@ const CalendarGridEnhanced: React.FC<CalendarGridProps> = ({ currentDate, events
         ))}
       </div>
 
-      <div className="grid grid-cols-7">
+      <div className="grid grid-cols-7 md:hidden">
+        {days.map((day, idx) => {
+          if (day === null) {
+            return <div key={`mobile-empty-${idx}`} className="h-[76px] bg-slate-50/40 border-b border-r border-slate-50 last:border-r-0" />;
+          }
+
+          const dayEvents = getDayEvents(day);
+          const currentDay = new Date(year, month, day);
+          const isToday = todayKey === currentDay.toDateString();
+          const isSelected = selectedDay === day;
+          const uniqueTypes = Array.from(new Set(dayEvents.map((event) => event.type))) as EventType[];
+          const displayedTypes = uniqueTypes.slice(0, 3);
+          const hiddenTypesCount = uniqueTypes.length - displayedTypes.length;
+
+          return (
+            <button
+              key={`mobile-${day}`}
+              onClick={() => onDayClick(day)}
+              className={`h-[76px] border-b border-r border-slate-50 px-1.5 py-2 transition-all duration-300 relative text-left flex flex-col ${
+                idx % 7 === 6 ? 'border-r-0' : ''
+              } ${
+                isSelected
+                  ? 'bg-blue-50 ring-1 ring-inset ring-blue-200'
+                  : dayEvents.length > 0
+                    ? 'bg-slate-50/70 active:bg-slate-100'
+                    : 'bg-white active:bg-slate-50'
+              }`}
+              aria-label={`${dayEvents.length} evento${dayEvents.length === 1 ? '' : 's'} no dia ${day}`}
+            >
+              <div className="flex items-start justify-between gap-1">
+                <span
+                  className={`flex h-7 w-7 items-center justify-center rounded-xl text-sm font-black ${
+                    isToday
+                      ? 'bg-[#112760] text-white shadow-lg'
+                      : isSelected
+                        ? 'bg-blue-100 text-[#112760]'
+                        : 'text-slate-500'
+                  }`}
+                >
+                  {day}
+                </span>
+                {dayEvents.length > 0 && (
+                  <span className="rounded-full bg-[#112760] px-1.5 py-0.5 text-[8px] font-black text-white min-w-[20px] text-center">
+                    {dayEvents.length}
+                  </span>
+                )}
+              </div>
+
+              <div className="mt-auto">
+                {dayEvents.length > 0 ? (
+                  <>
+                    <div className="flex items-center gap-1">
+                      {displayedTypes.map((type, indicatorIndex) => (
+                        <span
+                          key={`mobile-indicator-${day}-${type}-${indicatorIndex}`}
+                          className={`h-2.5 w-2.5 rounded-full ${EVENT_DOT_COLORS[type]} ring-1 ring-white shadow-sm`}
+                        />
+                      ))}
+                      {hiddenTypesCount > 0 && (
+                        <span className="text-[8px] font-black text-[#112760]">+{hiddenTypesCount}</span>
+                      )}
+                    </div>
+                    <span className="mt-1 block text-[8px] font-black uppercase tracking-[0.12em] text-slate-400">
+                      Toque
+                    </span>
+                  </>
+                ) : (
+                  <span className="block h-[14px]" />
+                )}
+              </div>
+            </button>
+          );
+        })}
+      </div>
+
+      <div className="hidden md:grid grid-cols-7">
         {days.map((day, idx) => {
           if (day === null) {
             return <div key={`empty-${idx}`} className="h-24 md:h-44 bg-slate-50/30 border-b border-r border-slate-50 last:border-r-0" />;
@@ -45,7 +122,7 @@ const CalendarGridEnhanced: React.FC<CalendarGridProps> = ({ currentDate, events
 
           const dayEvents = getDayEvents(day);
           const currentDay = new Date(year, month, day);
-          const isToday = new Date().toDateString() === currentDay.toDateString();
+          const isToday = todayKey === currentDay.toDateString();
           const isSelected = selectedDay === day;
           const weekdayLabel = currentDay.toLocaleDateString('pt-BR', { weekday: 'short' }).replace('.', '');
           const commitmentCount = dayEvents.filter((event) => !isLiturgicalEventType(event.type)).length;
@@ -59,7 +136,7 @@ const CalendarGridEnhanced: React.FC<CalendarGridProps> = ({ currentDate, events
             <button
               key={day}
               onClick={() => onDayClick(day)}
-              className={`h-24 md:h-44 border-b border-r border-slate-50 p-2 md:p-5 transition-all duration-300 group relative text-left flex flex-col items-start ${
+              className={`h-44 border-b border-r border-slate-50 p-5 transition-all duration-300 group relative text-left flex flex-col items-start overflow-hidden ${
                 idx % 7 === 6 ? 'border-r-0' : ''
               } ${
                 isSelected
@@ -85,7 +162,7 @@ const CalendarGridEnhanced: React.FC<CalendarGridProps> = ({ currentDate, events
 
                 <div className="flex items-center gap-2">
                   {dayEvents.length > 0 && (
-                    <span className="px-1.5 md:px-2 py-0.5 md:py-1 rounded-md md:rounded-lg bg-[#112760] text-white text-[8px] md:text-[10px] font-black tracking-wider shadow-sm min-w-[1.25rem] text-center">
+                    <span className="px-2 py-1 rounded-lg bg-[#112760] text-white text-[10px] font-black tracking-wider shadow-sm min-w-[1.25rem] text-center">
                       {dayEvents.length}
                     </span>
                   )}
@@ -96,12 +173,12 @@ const CalendarGridEnhanced: React.FC<CalendarGridProps> = ({ currentDate, events
               {dayEvents.length > 0 && (
                 <div className="mt-2 flex flex-wrap gap-1.5">
                   {commitmentCount > 0 && (
-                    <span className="rounded-full bg-[#cf1526]/10 px-2 py-0.5 text-[8px] md:text-[9px] font-black uppercase tracking-[0.12em] text-[#a61120]">
+                    <span className="rounded-full bg-[#cf1526]/10 px-2 py-0.5 text-[9px] font-black uppercase tracking-[0.12em] text-[#a61120]">
                       {commitmentCount} compromisso{commitmentCount > 1 ? 's' : ''}
                     </span>
                   )}
                   {liturgicalCount > 0 && (
-                    <span className="rounded-full bg-slate-200/70 px-2 py-0.5 text-[8px] md:text-[9px] font-black uppercase tracking-[0.12em] text-slate-600">
+                    <span className="rounded-full bg-slate-200/70 px-2 py-0.5 text-[9px] font-black uppercase tracking-[0.12em] text-slate-600">
                       {liturgicalCount} liturgico{liturgicalCount > 1 ? 's' : ''}
                     </span>
                   )}
@@ -112,13 +189,11 @@ const CalendarGridEnhanced: React.FC<CalendarGridProps> = ({ currentDate, events
                 {displayedTypes.map((type, indicatorIndex) => (
                   <span
                     key={`${type}-${indicatorIndex}`}
-                    className={`w-3.5 h-1.5 md:w-7 md:h-3.5 rounded-md ${EVENT_DOT_COLORS[type]} shadow-sm ring-1 ring-white ${
-                      indicatorIndex > 1 ? 'hidden md:inline-flex' : ''
-                    }`}
+                    className={`w-7 h-3.5 rounded-md ${EVENT_DOT_COLORS[type]} shadow-sm ring-1 ring-white`}
                   />
                 ))}
                 {remainingCount > 0 && (
-                  <span className="text-[8px] md:text-[11px] font-black text-[#112760] ml-0.5 whitespace-nowrap">
+                  <span className="text-[11px] font-black text-[#112760] ml-0.5 whitespace-nowrap">
                     +{remainingCount}
                   </span>
                 )}
