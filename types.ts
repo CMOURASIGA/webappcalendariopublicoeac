@@ -22,6 +22,7 @@ export interface CalendarEvent {
   description?: string;
   location?: string;
   status?: string;
+  sourceType?: string;
   type: EventType;
 }
 

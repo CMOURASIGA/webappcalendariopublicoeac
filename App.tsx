@@ -197,7 +197,7 @@ const App: React.FC = () => {
         dia: eventDay,
         diaSemana: new Date(eventYear, eventMonth - 1, eventDay).toLocaleDateString('pt-BR', { weekday: 'short' }),
         titulo: event.title.trim(),
-        tipo: event.type.trim(),
+        tipo: event.sourceType?.trim() || EVENT_TYPE_LABELS[event.type],
         horario: horario?.trim(),
         contexto: isLiturgicalEventType(event.type) ? 'liturgico' : 'eac',
       };

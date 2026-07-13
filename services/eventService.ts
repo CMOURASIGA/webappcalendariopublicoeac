@@ -144,6 +144,7 @@ const mapAppsScriptEvents = (events: AppsScriptEvent[]): CalendarEvent[] =>
         endTime: parsedEnd?.time,
         location: String(event.local || '').trim() || undefined,
         status: status || undefined,
+        sourceType: String(event.tipo || '').trim() || undefined,
         type: toEventType(String(event.tipo || title)),
       } as CalendarEvent;
     })

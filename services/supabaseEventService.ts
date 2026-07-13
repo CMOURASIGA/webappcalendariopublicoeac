@@ -209,6 +209,7 @@ const mapSupabaseEvents = (events: PublicCalendarEventRow[]): CalendarEvent[] =>
         location: String(event.local || '').trim() || undefined,
         description: String(event.proprietario || '').trim() || undefined,
         status: String(event.status || '').trim() || undefined,
+        sourceType: String(event.tipo || '').trim() || undefined,
         type: toEventType(eventTypeSource),
       } as CalendarEvent;
     })
