@@ -74,6 +74,7 @@ const toEventType = (value: string): EventType => {
 
   if (includesAny(normalized, ['missa', 'celebracao eucaristica', 'eucaristia'])) return 'Missa';
   if (normalized.includes('pos-encontro') || normalized.includes('pos encontro')) return 'P\u00f3s-Encontro';
+  if (normalized.includes('montagem')) return 'Prepara\u00e7\u00e3o Encontro';
   if (normalized.includes('preparacao') && normalized.includes('encontro')) return 'Prepara\u00e7\u00e3o Encontro';
   if (normalized.includes('circulo')) return 'Circulo';
   if (normalized.includes('cantina')) return 'Cantina';
