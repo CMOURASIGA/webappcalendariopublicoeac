@@ -55,6 +55,17 @@ const isLiturgicalEvent = (value: string): boolean => {
     'santissima trindade',
     'corpus christi',
     'pentecostes',
+    'missa',
+    'celebracao eucaristica',
+    'eucaristia',
+    'santa ',
+    'santo ',
+    'sao ',
+    'apostolo',
+    'martir',
+    'mes vocacional',
+    'mês vocacional',
+    'vocacional',
   ]);
 };
 
