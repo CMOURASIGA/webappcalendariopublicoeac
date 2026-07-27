@@ -118,6 +118,9 @@ const App: React.FC = () => {
       await compartilharAgendaOuBaixar(shareCardRef.current);
     } catch (error) {
       console.error('Erro ao compartilhar agenda:', error);
+      window.alert(
+        'Não foi possível gerar a agenda neste navegador. Atualize a página e tente novamente. Se o compartilhamento não estiver disponível, a imagem será baixada automaticamente.'
+      );
     } finally {
       setIsSharingAgenda(false);
     }
