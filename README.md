@@ -22,3 +22,7 @@ Aplicação React/Vite para consultar, apresentar e compartilhar os eventos púb
 A view deve fornecer os campos `id`, `atividade`, `tipo`, `inicio`, `termino`, `local`, `proprietario` e `status`.
 
 Eventos cancelados e categorias litúrgicas são descartados antes da apresentação. A imagem mensal de compartilhamento usa apenas os eventos do mês selecionado.
+
+## Ajuste temporário de fuso horário
+
+Defina `VITE_ADJUST_SOURCE_TIMEZONE=true` enquanto a origem estiver enviando os horários com três horas de atraso. O ajuste soma três horas somente na leitura e não altera os dados do Supabase. Após corrigir a origem, altere para `false` e faça um novo deploy.
