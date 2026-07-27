@@ -1,34 +1,24 @@
 # Calendário Público EAC
 
-Aplicação React/Vite para exibir eventos usando um endpoint publicado no Google Apps Script.
+Aplicação React/Vite para consultar, apresentar e compartilhar os eventos públicos não litúrgicos do EAC.
 
 ## Pré-requisitos
 
 1. Node.js 20+.
-2. Um Web App do Google Apps Script publicado com acesso liberado.
-3. A action `GET_EVENTS` disponível no `doPost`.
+2. Projeto Supabase com acesso público de leitura configurado.
+3. View `vw_public_calendar_events` ou outra view compatível.
 
 ## Configuração
 
 1. Instale as dependências:
    `npm install`
 2. Copie `.env.example` para `.env`.
-3. Preencha as variáveis:
-   `VITE_APPS_SCRIPT_URL=https://script.google.com/macros/s/SEU_DEPLOY_ID/exec`
+3. Preencha as variáveis descritas em `.env.example`.
 4. Execute:
    `npm run dev`
 
-## Contrato esperado do endpoint
+## Dados esperados
 
-O frontend envia:
-1. `POST` para `VITE_APPS_SCRIPT_URL`
-2. Body JSON: `{ "action": "GET_EVENTS", "payload": {} }`
+A view deve fornecer os campos `id`, `atividade`, `tipo`, `inicio`, `termino`, `local`, `proprietario` e `status`.
 
-A resposta esperada:
-1. `{ "ok": true, "events": [...] }`
-2. Campos de cada evento: `id`, `atividade`, `tipo`, `inicio`, `termino`, `local`, `proprietario`, `status`
-
-## Sobre GOOGLE_CREDENTIALS
-
-- `GOOGLE_CREDENTIALS` não deve ser exposto no frontend.
-- Se você usar Apps Script como proxy, as credenciais ficam no próprio Apps Script/projeto Google, não no browser.
+Eventos cancelados e categorias litúrgicas são descartados antes da apresentação. A imagem mensal de compartilhamento usa apenas os eventos do mês selecionado.
