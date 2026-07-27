@@ -18,6 +18,8 @@ interface ParsedDateTime {
 }
 
 const SAO_PAULO_TIME_ZONE = 'America/Sao_Paulo';
+const SOURCE_TIMEZONE_ADJUSTMENT_HOURS = 3;
+const SHOULD_ADJUST_SOURCE_TIMEZONE = import.meta.env.VITE_ADJUST_SOURCE_TIMEZONE?.trim().toLowerCase() === 'true';
 const DEFAULT_EVENTS_VIEW = 'vw_public_calendar_events';
 const CANCELLED_STATUSES = new Set(['CANCELADO', 'CANCELADA']);
 
@@ -122,6 +124,9 @@ const parseDateTime = (rawValue: string): ParsedDateTime | null => {
 
   const parsedDate = new Date(value);
   if (!Number.isNaN(parsedDate.getTime())) {
+    const displayDate = SHOULD_ADJUST_SOURCE_TIMEZONE
+      ? new Date(parsedDate.getTime() + SOURCE_TIMEZONE_ADJUSTMENT_HOURS * 60 * 60 * 1000)
+      : parsedDate;
     const parts = new Intl.DateTimeFormat('en-CA', {
       timeZone: SAO_PAULO_TIME_ZONE,
       year: 'numeric',
@@ -130,7 +135,7 @@ const parseDateTime = (rawValue: string): ParsedDateTime | null => {
       hour: '2-digit',
       minute: '2-digit',
       hour12: false,
-    }).formatToParts(parsedDate);
+    }).formatToParts(displayDate);
 
     const year = parts.find((part) => part.type === 'year')?.value;
     const month = parts.find((part) => part.type === 'month')?.value;
