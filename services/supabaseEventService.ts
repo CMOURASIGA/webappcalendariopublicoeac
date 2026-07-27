@@ -19,7 +19,7 @@ interface ParsedDateTime {
 
 const SAO_PAULO_TIME_ZONE = 'America/Sao_Paulo';
 const SOURCE_TIMEZONE_ADJUSTMENT_HOURS = 3;
-const SHOULD_ADJUST_SOURCE_TIMEZONE = import.meta.env.VITE_ADJUST_SOURCE_TIMEZONE?.trim().toLowerCase() === 'true';
+const SHOULD_ADJUST_SOURCE_TIMEZONE = (import.meta.env.VITE_ADJUST_SOURCE_TIMEZONE?.trim().toLowerCase() ?? 'true') === 'true';
 const DEFAULT_EVENTS_VIEW = 'vw_public_calendar_events';
 const CANCELLED_STATUSES = new Set(['CANCELADO', 'CANCELADA']);
 
