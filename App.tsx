@@ -1,6 +1,6 @@
 ﻿
 import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react';
-import { CalendarEvent, EventType, ViewMode, EVENT_DOT_COLORS, EVENT_TYPE_LABELS, isLiturgicalEventType } from './types';
+import { CalendarEvent, EventType, ViewMode, EVENT_DOT_COLORS, EVENT_TYPE_LABELS, PUBLIC_EVENT_TYPES } from './types';
 import { fetchPublicEvents } from './services/supabaseEventService';
 import { compartilharAgendaOuBaixar } from './services/imageExport';
 import CalendarGrid from './components/CalendarGridEnhanced';
@@ -10,7 +10,7 @@ import HelpModal from './components/HelpModal';
 import AgendaMensalShare, { type Evento as EventoAgendaShare } from './components/AgendaMensalShareEnhanced';
 
 const AUTO_REFRESH_INTERVAL_MS = 30 * 60_000;
-const ALL_EVENT_TYPES = Object.keys(EVENT_DOT_COLORS) as EventType[];
+const ALL_EVENT_TYPES = PUBLIC_EVENT_TYPES;
 const MOBILE_MEDIA_QUERY = '(max-width: 767px)';
 
 const App: React.FC = () => {
@@ -199,7 +199,6 @@ const App: React.FC = () => {
         titulo: event.title.trim(),
         tipo: event.sourceType?.trim() || EVENT_TYPE_LABELS[event.type],
         horario: horario?.trim(),
-        contexto: isLiturgicalEventType(event.type) ? 'liturgico' : 'eac',
       };
 
       const dedupeKey = [
@@ -223,20 +222,6 @@ const App: React.FC = () => {
       return a.tipo.localeCompare(b.tipo, 'pt-BR');
     });
   }, [currentDate, filteredEvents]);
-
-  const eventContextSummary = useMemo(() => {
-    return filteredEvents.reduce(
-      (acc, event) => {
-        if (isLiturgicalEventType(event.type)) {
-          acc.liturgical += 1;
-        } else {
-          acc.commitments += 1;
-        }
-        return acc;
-      },
-      { commitments: 0, liturgical: 0 }
-    );
-  }, [filteredEvents]);
 
   const toggleTypeFilter = (type: EventType) => {
     setSelectedTypes((previous) => {
@@ -441,10 +426,7 @@ const App: React.FC = () => {
               )}
               <div className="flex flex-wrap items-center justify-center gap-2 md:gap-3 mb-5 md:mb-8">
                 <span className="px-3 py-2 rounded-xl bg-[#cf1526]/10 text-[#a61120] border border-[#cf1526]/15 text-[10px] font-black uppercase tracking-[0.14em]">
-                  {eventContextSummary.commitments} compromissos EAC
-                </span>
-                <span className="px-3 py-2 rounded-xl bg-slate-100 text-slate-600 border border-slate-200 text-[10px] font-black uppercase tracking-[0.14em]">
-                  {eventContextSummary.liturgical} datas liturgicas
+                  {filteredEvents.length} eventos EAC neste mês
                 </span>
               </div>
             </div>
