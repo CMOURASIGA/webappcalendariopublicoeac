@@ -33,7 +33,6 @@ export const PUBLIC_EVENT_TYPES: EventType[] = [
   'Cantina',
   'Circulo',
   'Pós-Encontro',
-  'Missa',
   'Preparação Encontro',
   'Reunião',
   'Outro',
