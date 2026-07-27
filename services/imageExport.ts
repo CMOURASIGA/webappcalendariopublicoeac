@@ -1,9 +1,35 @@
 import * as htmlToImage from 'html-to-image';
 
 const AGENDA_FILE_NAME = 'agenda-eac.png';
+const TRANSPARENT_PIXEL = 'data:image/gif;base64,R0lGODlhAQABAAD/ACwAAAAAAQABAAACADs=';
 const EXPORT_OPTIONS = {
-  pixelRatio: 2,
-  backgroundColor: '#F0EFE9',
+  pixelRatio: 1,
+  backgroundColor: '#FAF9F5',
+  cacheBust: true,
+  skipFonts: true,
+  imagePlaceholder: TRANSPARENT_PIXEL,
+};
+
+const waitForAssets = async (node: HTMLElement): Promise<void> => {
+  if (typeof document !== 'undefined' && 'fonts' in document) {
+    await document.fonts.ready;
+  }
+
+  const images = Array.from(node.querySelectorAll('img'));
+  await Promise.all(images.map(async (image) => {
+    if (image.complete && image.naturalWidth > 0) return;
+
+    try {
+      await image.decode();
+    } catch {
+      await new Promise<void>((resolve) => {
+        const finish = () => resolve();
+        image.addEventListener('load', finish, { once: true });
+        image.addEventListener('error', finish, { once: true });
+        window.setTimeout(finish, 3000);
+      });
+    }
+  }));
 };
 
 const downloadFromDataUrl = (dataUrl: string): void => {
@@ -19,15 +45,17 @@ const downloadFromBlob = (blob: Blob): void => {
   link.download = AGENDA_FILE_NAME;
   link.href = objectUrl;
   link.click();
-  URL.revokeObjectURL(objectUrl);
+  window.setTimeout(() => URL.revokeObjectURL(objectUrl), 1000);
 };
 
 export async function exportarAgendaComoImagem(node: HTMLElement): Promise<void> {
+  await waitForAssets(node);
   const dataUrl = await htmlToImage.toPng(node, EXPORT_OPTIONS);
   downloadFromDataUrl(dataUrl);
 }
 
 export async function compartilharAgendaOuBaixar(node: HTMLElement): Promise<void> {
+  await waitForAssets(node);
   const blob = await htmlToImage.toBlob(node, EXPORT_OPTIONS);
 
   if (!blob) {
@@ -45,9 +73,12 @@ export async function compartilharAgendaOuBaixar(node: HTMLElement): Promise<voi
       files: [imageFile],
     };
 
-    const canShareFiles = typeof navigator.canShare === 'function'
-      ? navigator.canShare(shareData)
-      : true;
+    let canShareFiles = false;
+    try {
+      canShareFiles = typeof navigator.canShare === 'function' && navigator.canShare(shareData);
+    } catch {
+      canShareFiles = false;
+    }
 
     if (canShareFiles) {
       try {
