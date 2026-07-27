@@ -9,10 +9,10 @@ const LEGEND_DESCRIPTIONS: Record<EventType, string> = {
   'Missa': 'Celebrações eucarísticas.',
   'Preparação Encontro': 'Preparativos para encontros e eventos do EAC.',
   'Reunião': 'Reuniões de organização, coordenação e apoio.',
-  'Tempo Litúrgico': 'Marcos e períodos litúrgicos (Advento, Quaresma, Tempo Pascal e Tempo Comum).',
-  'Solenidade': 'Grandes datas litúrgicas (Páscoa, Pentecostes, Corpus Christi, Natal, etc.).',
-  'Festa de Santos': 'Celebrações relacionadas a santos.',
-  'Datas Marianas': 'Celebrações relacionadas a Nossa Senhora.',
+  'Tempo Litúrgico': 'Categoria interna não exibida no calendário público.',
+  'Solenidade': 'Categoria interna não exibida no calendário público.',
+  'Festa de Santos': 'Categoria interna não exibida no calendário público.',
+  'Datas Marianas': 'Categoria interna não exibida no calendário público.',
   'Outro': 'Eventos pastorais que não se enquadram nas categorias anteriores.',
 };
 
@@ -24,10 +24,6 @@ const EVENT_ORDER: EventType[] = [
   'Missa',
   'Preparação Encontro',
   'Reunião',
-  'Tempo Litúrgico',
-  'Solenidade',
-  'Festa de Santos',
-  'Datas Marianas',
   'Outro',
 ];
 
@@ -43,8 +39,8 @@ const HelpModal: React.FC = () => {
         <section className="bg-slate-50 border border-slate-100 rounded-2xl p-5 md:p-6">
           <h3 className="text-sm md:text-base font-black uppercase tracking-[0.12em] text-[#112760] mb-3">Objetivo</h3>
           <p className="text-sm md:text-base text-slate-600 leading-relaxed">
-            Este calendário apresenta os eventos públicos do EAC e referências do calendário litúrgico,
-            facilitando a organização da comunidade.
+            Este calendário apresenta os eventos públicos do EAC, facilitando a organização,
+            a participação e o compartilhamento da agenda com a comunidade.
           </p>
         </section>
 
@@ -55,7 +51,7 @@ const HelpModal: React.FC = () => {
             <p>2. Use `Grade` para visão mensal e `Lista` para visão detalhada.</p>
             <p>3. Clique em um dia (ou em `Ver Detalhes`) para abrir os eventos.</p>
             <p>4. Use os chips de legenda para filtrar categorias específicas.</p>
-            <p>5. Os blocos vermelhos destacam compromissos reais do EAC e os neutros indicam referencias liturgicas.</p>
+            <p>5. Todos os itens exibidos são eventos e compromissos públicos do EAC.</p>
             <p>6. Eventos sem horario fechado aparecem como `Sem horario definido`.</p>
             <p>7. Use `Atualizar agora` para sincronizar imediatamente.</p>
           </div>
