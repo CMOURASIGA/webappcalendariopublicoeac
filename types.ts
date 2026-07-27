@@ -28,6 +28,17 @@ export interface CalendarEvent {
 
 export type ViewMode = 'calendar' | 'list';
 
+export const PUBLIC_EVENT_TYPES: EventType[] = [
+  'Encontro',
+  'Cantina',
+  'Circulo',
+  'Pós-Encontro',
+  'Missa',
+  'Preparação Encontro',
+  'Reunião',
+  'Outro',
+];
+
 export const LITURGICAL_EVENT_TYPES: EventType[] = [
   'Tempo Litúrgico',
   'Solenidade',
@@ -39,7 +50,7 @@ export const isLiturgicalEventType = (type: EventType): boolean =>
   LITURGICAL_EVENT_TYPES.includes(type);
 
 export const getEventContextLabel = (type: EventType): string =>
-  isLiturgicalEventType(type) ? 'Data liturgica' : 'Compromisso EAC';
+  isLiturgicalEventType(type) ? 'Evento não publicado' : 'Evento EAC';
 
 export const EAC_COLORS = {
   primary: "#014373",
