@@ -36,54 +36,30 @@ const normalizeStatus = (value: string | null | undefined): string =>
 const includesAny = (text: string, candidates: string[]): boolean =>
   candidates.some((candidate) => text.includes(candidate));
 
+const isLiturgicalEvent = (value: string): boolean => {
+  const normalized = normalizeText(value);
+  return includesAny(normalized, [
+    'tempo liturgico',
+    'solenidade',
+    'datas marianas',
+    'festa mariana',
+    'festa de santos',
+    'festa dos santos',
+    'advento',
+    'quaresma',
+    'tempo pascal',
+    'tempo comum',
+    'nossa senhora',
+    'imaculada conceicao',
+    'assuncao de maria',
+    'santissima trindade',
+    'corpus christi',
+    'pentecostes',
+  ]);
+};
+
 const toEventType = (value: string): EventType => {
   const normalized = normalizeText(value);
-
-  if (includesAny(normalized, ['tempo liturgico', 'advento', 'quaresma', 'tempo pascal', 'tempo comum'])) {
-    return 'Tempo Lit\u00fargico';
-  }
-
-  if (
-    includesAny(normalized, [
-      'solenidade',
-      'pascoa',
-      'pentecostes',
-      'corpus christi',
-      'natal',
-      'ascensao do senhor',
-      'santissima trindade',
-    ])
-  ) {
-    return 'Solenidade';
-  }
-
-  if (
-    includesAny(normalized, [
-      'datas marianas',
-      'festa mariana',
-      'nossa senhora',
-      'imaculada conceicao',
-      'aparecida',
-      'assuncao de maria',
-      'maria mae de deus',
-    ])
-  ) {
-    return 'Datas Marianas';
-  }
-
-  if (
-    includesAny(normalized, [
-      'festa de santos',
-      'festa dos santos',
-      'sao ',
-      'santa ',
-      'santo ',
-      'apostolo',
-      'martir',
-    ])
-  ) {
-    return 'Festa de Santos';
-  }
 
   if (includesAny(normalized, ['missa', 'celebracao eucaristica', 'eucaristia'])) return 'Missa';
   if (normalized.includes('pos-encontro') || normalized.includes('pos encontro')) return 'P\u00f3s-Encontro';
@@ -199,6 +175,7 @@ const mapSupabaseEvents = (events: PublicCalendarEventRow[]): CalendarEvent[] =>
 
       const parsedEnd = parseDateTime(String(event.termino || '').trim());
       const eventTypeSource = String(event.tipo || title).trim();
+      if (isLiturgicalEvent(`${eventTypeSource} ${title}`)) return null;
 
       return {
         id: String(event.id || `supabase-ev-${index}`),
