@@ -1,5 +1,5 @@
 import React from 'react';
-import { CalendarEvent, EVENT_DOT_COLORS, EventType, isLiturgicalEventType } from '../types';
+import { CalendarEvent, EVENT_DOT_COLORS, EventType } from '../types';
 
 interface CalendarGridProps {
   currentDate: Date;
@@ -125,9 +125,6 @@ const CalendarGridEnhanced: React.FC<CalendarGridProps> = ({ currentDate, events
           const isToday = todayKey === currentDay.toDateString();
           const isSelected = selectedDay === day;
           const weekdayLabel = currentDay.toLocaleDateString('pt-BR', { weekday: 'short' }).replace('.', '');
-          const commitmentCount = dayEvents.filter((event) => !isLiturgicalEventType(event.type)).length;
-          const liturgicalCount = dayEvents.length - commitmentCount;
-
           const uniqueTypes = Array.from(new Set(dayEvents.map((event) => event.type))) as EventType[];
           const displayedTypes = uniqueTypes.slice(0, 4);
           const remainingCount = dayEvents.length - displayedTypes.length;
@@ -172,14 +169,9 @@ const CalendarGridEnhanced: React.FC<CalendarGridProps> = ({ currentDate, events
 
               {dayEvents.length > 0 && (
                 <div className="mt-2 flex flex-wrap gap-1.5">
-                  {commitmentCount > 0 && (
+                  {dayEvents.length > 0 && (
                     <span className="rounded-full bg-[#cf1526]/10 px-2 py-0.5 text-[9px] font-black uppercase tracking-[0.12em] text-[#a61120]">
-                      {commitmentCount} compromisso{commitmentCount > 1 ? 's' : ''}
-                    </span>
-                  )}
-                  {liturgicalCount > 0 && (
-                    <span className="rounded-full bg-slate-200/70 px-2 py-0.5 text-[9px] font-black uppercase tracking-[0.12em] text-slate-600">
-                      {liturgicalCount} liturgico{liturgicalCount > 1 ? 's' : ''}
+                      {dayEvents.length} evento{dayEvents.length > 1 ? 's' : ''} EAC
                     </span>
                   )}
                 </div>
