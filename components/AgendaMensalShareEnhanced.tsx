@@ -14,159 +14,176 @@ type Props = {
   eventos: Evento[];
 };
 
-type Density = 'few' | 'medium' | 'many';
+const LOGO_EAC_URL = 'https://imgur.com/c5XQ7TW.png';
 
-const truncate = (value: string, maxLength: number): string => {
-  if (value.length <= maxLength) return value;
-  return `${value.slice(0, maxLength - 3).trim()}...`;
+const normalize = (value: string): string =>
+  value.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
+
+const truncate = (value: string, maxLength: number): string =>
+  value.length <= maxLength ? value : `${value.slice(0, maxLength - 3).trim()}...`;
+
+const EventIcon: React.FC<{ event: Evento }> = ({ event }) => {
+  const source = normalize(`${event.tipo} ${event.titulo}`);
+
+  if (source.includes('cantina')) {
+    return (
+      <svg viewBox="0 0 64 64" className="h-20 w-20" fill="none" stroke="currentColor" strokeWidth="3">
+        <path d="M10 38h44M15 38c1-10 8-15 17-15s16 5 17 15M14 45h36l-4 8H18z" />
+        <path d="M20 18h25l-3-7M39 11l5-5" />
+      </svg>
+    );
+  }
+
+  if (source.includes('reuniao') || source.includes('reunião')) {
+    return (
+      <svg viewBox="0 0 64 64" className="h-20 w-20" fill="none" stroke="currentColor" strokeWidth="3">
+        <circle cx="18" cy="35" r="7" /><circle cx="46" cy="35" r="7" /><circle cx="32" cy="29" r="8" />
+        <path d="M7 55c1-9 5-13 11-13M57 55c-1-9-5-13-11-13M19 56c1-12 5-18 13-18s12 6 13 18" />
+        <path d="M17 8h30v13H31l-7 6 2-6h-9z" />
+      </svg>
+    );
+  }
+
+  if (source.includes('prepar') || source.includes('montagem')) {
+    return (
+      <svg viewBox="0 0 64 64" className="h-20 w-20" fill="none" stroke="currentColor" strokeWidth="3">
+        <path d="M9 12h17v17H9zM38 9h17v17H38zM12 38h17v17H12zM36 36h19v19H36z" />
+        <path d="M17 12v-5M26 20h6M38 17h-6M21 38v-6M36 45h-7" />
+      </svg>
+    );
+  }
+
+  if (source.includes('pos') || source.includes('social') || source.includes('encontro')) {
+    return (
+      <svg viewBox="0 0 64 64" className="h-20 w-20" fill="none" stroke="currentColor" strokeWidth="3">
+        <path d="M13 36l27-15v25L13 36zM40 25l10-8v32l-10-8M13 36l-3 13h11l5-10" />
+        <path d="M51 11l4-5M54 26h7M52 55l5 4" />
+      </svg>
+    );
+  }
+
+  return (
+    <svg viewBox="0 0 64 64" className="h-20 w-20" fill="none" stroke="currentColor" strokeWidth="3">
+      <path d="M32 7l7 16 18 2-13 12 4 18-16-9-16 9 4-18L7 25l18-2z" />
+    </svg>
+  );
 };
 
 const AgendaMensalShareEnhanced: React.FC<Props> = ({ mes, ano, eventos }) => {
   const sortedEvents = useMemo(() => {
     return [...eventos].sort((a, b) => {
       if (a.dia !== b.dia) return a.dia - b.dia;
-      if ((a.horario ?? '') !== (b.horario ?? '')) {
-        return (a.horario ?? '').localeCompare(b.horario ?? '', 'pt-BR');
-      }
-      return a.titulo.localeCompare(b.titulo, 'pt-BR');
+      return (a.horario ?? '').localeCompare(b.horario ?? '', 'pt-BR');
     });
   }, [eventos]);
 
-  const totalEvents = sortedEvents.length;
-  const density: Density = totalEvents >= 9 ? 'many' : totalEvents >= 5 ? 'medium' : 'few';
-  const rows = Math.max(Math.ceil(totalEvents / 2), 1);
-  const rowHeight = density === 'many' ? 178 : density === 'medium' ? 206 : 226;
-  const rowGap = density === 'many' ? 18 : 22;
-  const headerHeight = 430;
-  const footerHeight = 330;
-  const dynamicHeight = Math.max(
-    1536,
-    headerHeight + footerHeight + (rows * rowHeight) + (Math.max(rows - 1, 0) * rowGap)
-  );
-
-  const cardClass = density === 'many'
-    ? 'min-h-[168px] rounded-[28px] p-5'
-    : density === 'medium'
-      ? 'min-h-[194px] rounded-[32px] p-6'
-      : 'min-h-[214px] rounded-[34px] p-7';
-  const dayClass = density === 'many' ? 'text-[48px]' : density === 'medium' ? 'text-[56px]' : 'text-[62px]';
-  const titleClass = density === 'many' ? 'text-[24px]' : density === 'medium' ? 'text-[27px]' : 'text-[30px]';
-  const typeClass = density === 'many' ? 'text-[13px]' : 'text-[15px]';
+  const compact = sortedEvents.length >= 9;
 
   return (
     <section
-      className="relative overflow-hidden bg-[#faf9f5] font-sans text-[#092b5c]"
-      style={{ width: '1080px', height: `${dynamicHeight}px` }}
+      className="relative w-[1080px] overflow-hidden bg-[#faf9f5] font-sans text-[#082a60]"
+      style={{ minHeight: '1536px' }}
     >
-      <div className="pointer-events-none absolute inset-0" aria-hidden="true">
-        <div className="absolute -left-24 top-32 h-80 w-52 rotate-[-12deg] rounded-[48%] bg-[#b8df12]" />
-        <div className="absolute -right-28 -top-16 h-72 w-64 rotate-12 rounded-[42%] bg-[#1265d8]" />
-        <div className="absolute right-8 top-[360px] grid grid-cols-3 gap-3 opacity-60">
-          {Array.from({ length: 9 }).map((_, index) => (
-            <span key={index} className="h-3 w-3 rounded-full bg-[#1265d8]" />
-          ))}
+      <div className="pointer-events-none absolute inset-0 overflow-hidden" aria-hidden="true">
+        <div className="absolute -left-28 top-36 h-96 w-64 rotate-[-12deg] rounded-[48%] bg-[#b9e509]" />
+        <div className="absolute -right-28 -top-20 h-80 w-72 rotate-12 rounded-[44%] bg-[#1269dd]" />
+        <div className="absolute right-8 top-[410px] grid grid-cols-3 gap-3 opacity-60">
+          {Array.from({ length: 9 }).map((_, index) => <span key={index} className="h-3 w-3 rounded-full bg-[#1269dd]" />)}
         </div>
-        <div
-          className="absolute inset-0 opacity-20"
-          style={{
-            backgroundImage: 'radial-gradient(rgba(9,43,92,0.12) 0.8px, transparent 0.8px)',
-            backgroundSize: '16px 16px',
-          }}
-        />
+        <div className="absolute left-28 top-56 rotate-[-15deg] text-[70px] font-black text-[#0b3e91]">→</div>
+        <div className="absolute left-[355px] top-16 rotate-[-12deg] text-[64px] text-[#0b3e91]">☆</div>
+        <div className="absolute left-[500px] top-16 text-[76px] text-[#f3bd19]">♕</div>
       </div>
 
-      <header className="relative z-10 px-14 pb-8 pt-10">
-        <div className="flex items-start justify-between gap-8">
+      <header className="relative z-10 px-12 pb-8 pt-10">
+        <div className="flex items-start justify-between">
           <div className="flex items-center gap-5">
             <img
-              src="/assets/eac/logo-eac.png"
+              src={LOGO_EAC_URL}
+              crossOrigin="anonymous"
               alt="Logo EAC"
-              className="h-24 w-auto object-contain drop-shadow-md"
+              className="h-28 w-28 object-contain"
             />
             <div>
-              <p className="text-[42px] font-black leading-none text-[#092b5c]">EAC</p>
-              <p className="mt-2 text-[20px] font-black uppercase leading-tight tracking-[0.04em]">
-                Porciúncula<br />de Sant&apos;Anna
-              </p>
+              <p className="text-[48px] font-black leading-none">EAC</p>
+              <p className="mt-2 text-[20px] font-black uppercase leading-[1.05]">Porciúncula<br />de Sant&apos;Anna</p>
             </div>
           </div>
-          <div className="rotate-[-4deg] rounded-[22px] bg-[#f6c83f] px-7 py-4 shadow-lg">
-            <p className="text-[20px] font-black uppercase leading-tight">Vive o EAC!<br />Faz acontecer!</p>
+          <div className="mt-4 rotate-[-5deg] rounded-[22px] bg-[#f5c43d] px-7 py-4 shadow-lg">
+            <p className="text-[21px] font-black uppercase leading-tight">Vive o EAC!<br />Faz acontecer!</p>
           </div>
         </div>
 
-        <div className="mt-7 text-center">
-          <p className="text-[74px] font-black uppercase leading-none tracking-[-0.04em] text-[#092b5c]">
+        <div className="mt-3 text-center">
+          <h1
+            className="rotate-[-2deg] text-[92px] font-black uppercase italic leading-none tracking-[-0.07em]"
+            style={{ textShadow: '3px 3px 0 rgba(8,42,96,0.08)' }}
+          >
             Agenda EAC
-          </p>
-          <div className="mx-auto mt-3 inline-flex rotate-[-1deg] bg-[#1265d8] px-12 py-3 shadow-xl">
-            <p className="text-[54px] font-black uppercase leading-none text-white">
-              {mes} <span className="text-[#c4ec19]">{ano}</span>
+          </h1>
+          <div className="mx-auto mt-1 inline-flex rotate-[-2deg] bg-[#1269dd] px-16 py-3 shadow-xl">
+            <p className="text-[58px] font-black uppercase italic leading-none text-white">
+              {mes} <span className="text-[#b9e509]">{ano}</span>
             </p>
           </div>
         </div>
       </header>
 
-      <main className="relative z-10 px-10">
-        <div className={`grid grid-cols-2 ${density === 'many' ? 'gap-4' : 'gap-5'}`}>
+      <main className="relative z-10 px-8 pb-8 pt-8">
+        <div className={`grid grid-cols-2 ${compact ? 'gap-4' : 'gap-5'}`}>
           {sortedEvents.length === 0 ? (
-            <div className="col-span-2 rounded-[34px] border border-slate-200 bg-white p-14 text-center shadow-xl">
-              <p className="text-[34px] font-black uppercase tracking-[0.04em]">Sem eventos neste mês</p>
-              <p className="mt-3 text-[20px] font-bold text-slate-500">Acompanhe as próximas atualizações do EAC.</p>
+            <div className="col-span-2 rounded-[34px] bg-white p-14 text-center shadow-xl">
+              <p className="text-[34px] font-black uppercase">Sem eventos neste mês</p>
             </div>
-          ) : (
-            sortedEvents.map((evento, index) => (
-              <article
-                key={`${evento.dia}-${evento.titulo}-${evento.horario ?? ''}-${index}`}
-                className={`${cardClass} flex border border-slate-200 bg-white shadow-[0_14px_30px_rgba(9,43,92,0.13)] ${
-                  totalEvents % 2 === 1 && index === totalEvents - 1 ? 'col-span-2 mx-auto w-[49%]' : ''
-                }`}
-              >
-                <div className="flex w-[118px] shrink-0 flex-col items-center justify-center border-r border-red-100 pr-5">
-                  <span className={`${dayClass} font-black leading-none text-[#df1425] tabular-nums`}>
-                    {String(evento.dia).padStart(2, '0')}
-                  </span>
-                  <span className="mt-2 text-[21px] font-black uppercase tracking-[0.08em] text-[#df1425]">
-                    {evento.diaSemana.replace('.', '')}
-                  </span>
-                </div>
+          ) : sortedEvents.map((evento, index) => (
+            <article
+              key={`${evento.dia}-${evento.titulo}-${evento.horario ?? ''}-${index}`}
+              className={`${compact ? 'min-h-[180px] p-4' : 'min-h-[210px] p-5'} flex items-stretch rounded-[30px] border border-slate-200 bg-white shadow-[0_14px_28px_rgba(8,42,96,0.14)] ${
+                sortedEvents.length % 2 === 1 && index === sortedEvents.length - 1 ? 'col-span-2 w-[49%]' : ''
+              }`}
+            >
+              <div className="flex w-[112px] shrink-0 items-center justify-center rounded-[22px] bg-[#e41526] text-white shadow-md">
+                <EventIcon event={evento} />
+              </div>
 
-                <div className="min-w-0 flex-1 pl-6">
-                  <h2 className={`${titleClass} font-black uppercase leading-[1.04] text-[#092b5c]`}>
-                    {truncate(evento.titulo, density === 'many' ? 35 : 44)}
-                  </h2>
-                  <p className="mt-3 text-[18px] font-bold text-slate-600">
-                    ◷ {evento.horario || 'Horário a definir'}
-                  </p>
-                  <span className={`mt-4 inline-flex rounded-full bg-[#df1425] px-4 py-1.5 ${typeClass} font-black uppercase tracking-[0.06em] text-white`}>
-                    {truncate(evento.tipo, 24)}
-                  </span>
-                </div>
-              </article>
-            ))
-          )}
+              <div className="ml-4 flex w-[92px] shrink-0 flex-col items-center justify-center border-r border-slate-200 pr-4">
+                <span className={`${compact ? 'text-[48px]' : 'text-[58px]'} font-black leading-none text-[#e41526]`}>
+                  {String(evento.dia).padStart(2, '0')}
+                </span>
+                <span className="mt-2 text-[20px] font-black uppercase text-[#e41526]">
+                  {evento.diaSemana.replace('.', '')}
+                </span>
+              </div>
+
+              <div className="min-w-0 flex-1 py-2 pl-5">
+                <h2 className={`${compact ? 'text-[22px]' : 'text-[27px]'} font-black uppercase leading-[1.02]`}>
+                  {truncate(evento.titulo, compact ? 30 : 38)}
+                </h2>
+                <p className="mt-3 text-[17px] font-bold text-slate-600">◷ {evento.horario || 'Horário a definir'}</p>
+                <span className="mt-4 inline-flex rounded-full bg-[#e41526] px-4 py-1.5 text-[14px] font-black uppercase tracking-[0.05em] text-white">
+                  {truncate(evento.tipo, 20)}
+                </span>
+              </div>
+            </article>
+          ))}
         </div>
       </main>
 
-      <footer className="absolute bottom-0 left-0 right-0 z-10 h-[310px] overflow-hidden">
-        <div className="absolute bottom-24 left-10 w-[575px] rotate-[-2deg] bg-[#092b5c] px-8 py-6 shadow-xl">
-          <p className="text-[27px] font-black uppercase leading-tight text-white">
-            Não fique de fora!
-          </p>
-          <p className="mt-1 text-[30px] font-black uppercase leading-tight text-[#c4ec19]">
-            Marque na agenda<br />e chame a galera!
-          </p>
+      <footer className="relative z-10 mt-3 h-[390px] overflow-hidden">
+        <div className="absolute bottom-28 left-8 w-[570px] rotate-[-3deg] bg-[#082a60] px-9 py-7 shadow-xl">
+          <p className="text-[28px] font-black uppercase leading-tight text-white">Não fique de fora!</p>
+          <p className="mt-1 text-[31px] font-black uppercase leading-[1.06] text-[#b9e509]">Marque na agenda<br />e chame a galera!</p>
         </div>
 
         <div className="absolute bottom-8 left-12">
-          <p className="text-[22px] font-black uppercase tracking-[0.05em]">Siga nossas redes!</p>
-          <p className="mt-2 text-[21px] font-black">@EAC.PORCIUNCULA</p>
+          <p className="text-[23px] font-black uppercase">Siga nossas redes!</p>
+          <p className="mt-2 text-[21px] font-black">◎ ◉ &nbsp; @EAC.PORCIUNCULA</p>
         </div>
 
         <img
           src="/assets/eac/menina-eac.png"
           alt="Personagem EAC"
-          className="pointer-events-none absolute bottom-0 right-4 h-[305px] w-auto object-contain drop-shadow-[0_18px_30px_rgba(9,43,92,0.25)]"
+          className="pointer-events-none absolute bottom-0 right-0 h-[390px] w-auto object-contain drop-shadow-[0_18px_30px_rgba(8,42,96,0.24)]"
         />
       </footer>
     </section>
