@@ -71,7 +71,20 @@ const AgendaMensalShareEnhanced: React.FC<Props> = ({ mes, ano, eventos }) => {
     a.dia !== b.dia ? a.dia - b.dia : (a.horario ?? '').localeCompare(b.horario ?? '', 'pt-BR')
   ), [eventos]);
   const visibleEvents = sortedEvents.slice(0, 8);
-  const compact = visibleEvents.length > 4;
+  const groupedEvents = useMemo(() => {
+    const groups = new Map<number, Evento[]>();
+    for (const event of visibleEvents) {
+      const dayEvents = groups.get(event.dia) ?? [];
+      dayEvents.push(event);
+      groups.set(event.dia, dayEvents);
+    }
+    return Array.from(groups.entries()).map(([dia, dayEvents]) => ({
+      dia,
+      diaSemana: dayEvents[0].diaSemana,
+      eventos: dayEvents,
+    }));
+  }, [visibleEvents]);
+  const compact = visibleEvents.length > 4 || groupedEvents.length > 4;
 
   return (
     <section
@@ -120,32 +133,58 @@ const AgendaMensalShareEnhanced: React.FC<Props> = ({ mes, ano, eventos }) => {
 
       <main className="relative z-10 px-12 pb-10 pt-4">
         <div className={`grid grid-cols-2 ${compact ? 'gap-x-7 gap-y-8' : 'gap-x-10 gap-y-11'}`}>
-          {visibleEvents.length === 0 ? (
+          {groupedEvents.length === 0 ? (
             <div className="relative col-span-2 mx-20 -rotate-1 bg-[#fffdf8] p-16 text-center shadow-2xl">
               <span className="absolute -top-5 left-[40%] h-10 w-44 rotate-2 bg-[#facc15]/80" />
               <p className="text-[34px] font-black uppercase">Ainda não há eventos publicados neste mês</p>
             </div>
-          ) : visibleEvents.map((evento, index) => {
+          ) : groupedEvents.map((grupo, index) => {
             const rotation = [-2.1, 1.5, 1.1, -1.5, -.8, 1.8, 1.2, -1.6][index];
             const tape = ['#facc15bb', '#75d5f5bb', '#a3e635bb', '#f2a5b5bb'][index % 4];
+            const multipleEvents = grupo.eventos.length > 1;
             return (
-              <article key={`${evento.dia}-${evento.titulo}-${index}`} className={`${compact ? 'min-h-[226px]' : 'min-h-[260px]'} relative flex bg-[#fffdf8] p-5 shadow-[0_18px_28px_rgba(70,35,12,.30)]`} style={{ transform: `rotate(${rotation}deg)`, clipPath: 'polygon(1% 0,100% 1%,99% 98%,2% 100%)' }}>
+              <article
+                key={`dia-${grupo.dia}`}
+                className={`${multipleEvents ? 'min-h-[310px]' : compact ? 'min-h-[226px]' : 'min-h-[260px]'} relative flex bg-[#fffdf8] p-5 shadow-[0_18px_28px_rgba(70,35,12,.30)]`}
+                style={{ transform: `rotate(${rotation}deg)`, clipPath: 'polygon(1% 0,100% 1%,99% 98%,2% 100%)' }}
+              >
                 <span className="absolute -top-5 left-[36%] z-30 h-11 w-36 shadow-sm" style={{ backgroundColor: tape, transform: `rotate(${index % 2 ? -5 : 4}deg)`, clipPath: 'polygon(2% 7%,99% 0,96% 94%,0 100%)' }} />
                 <span className="absolute right-5 top-4 h-4 w-4 rounded-full bg-[#b91c1c] shadow-[2px_4px_3px_rgba(0,0,0,.35)]" />
-                <div className="flex w-[126px] shrink-0 items-center justify-center bg-[#111827] text-white shadow-inner" style={{ clipPath: 'polygon(4% 0,100% 3%,96% 100%,0 96%)' }}><EventIcon event={evento} /></div>
-                <div className="ml-4 flex w-[92px] shrink-0 flex-col items-center justify-center border-r-2 border-dashed border-[#d4c4ad] pr-4">
-                  <span className="text-[57px] font-black leading-none text-[#dc2626]">{String(evento.dia).padStart(2, '0')}</span>
-                  <span className="mt-2 text-[20px] font-black uppercase text-[#dc2626]">{evento.diaSemana.replace('.', '')}</span>
+
+                <div className="flex w-[104px] shrink-0 flex-col items-center justify-center border-r-2 border-dashed border-[#d4c4ad] pr-4">
+                  <span className="text-[57px] font-black leading-none text-[#dc2626]">{String(grupo.dia).padStart(2, '0')}</span>
+                  <span className="mt-2 text-[20px] font-black uppercase text-[#dc2626]">{grupo.diaSemana.replace('.', '')}</span>
+                  {multipleEvents && (
+                    <span className="mt-4 -rotate-2 bg-[#facc15] px-2 py-1 text-center text-[11px] font-black uppercase leading-tight text-[#111827]">
+                      {grupo.eventos.length} eventos<br />neste dia
+                    </span>
+                  )}
                 </div>
-                <div className="min-w-0 flex-1 py-2 pl-5">
-                  <h2 className={`${compact ? 'text-[22px]' : 'text-[27px]'} font-black uppercase leading-[1.03]`}>{truncate(evento.titulo, compact ? 28 : 36)}</h2>
-                  <p className="mt-3 text-[17px] font-bold text-slate-600">◷ {evento.horario || 'Horário a definir'}</p>
-                  <span className="mt-4 inline-flex -rotate-1 bg-[#dc2626] px-4 py-1.5 text-[14px] font-black uppercase tracking-wide text-white" style={{ clipPath: 'polygon(2% 5%,100% 0,97% 94%,0 100%)' }}>{truncate(evento.tipo, 19)}</span>
+
+                <div className="ml-4 min-w-0 flex-1 divide-y-2 divide-dashed divide-[#d4c4ad]">
+                  {grupo.eventos.map((evento, eventIndex) => (
+                    <div key={`${evento.titulo}-${evento.horario ?? eventIndex}`} className={`flex min-w-0 gap-3 ${eventIndex === 0 ? 'pb-3' : 'py-3'}`}>
+                      <div
+                        className={`${multipleEvents ? 'h-[76px] w-[76px]' : 'h-[116px] w-[116px]'} flex shrink-0 items-center justify-center bg-[#111827] text-white shadow-inner [&_svg]:h-[62px] [&_svg]:w-[62px]`}
+                        style={{ clipPath: 'polygon(4% 0,100% 3%,96% 100%,0 96%)' }}
+                      >
+                        <EventIcon event={evento} />
+                      </div>
+                      <div className="min-w-0 flex-1 pt-1">
+                        <h2 className={`${multipleEvents ? 'text-[19px]' : compact ? 'text-[22px]' : 'text-[27px]'} font-black uppercase leading-[1.03]`}>
+                          {truncate(evento.titulo, multipleEvents ? 25 : compact ? 28 : 36)}
+                        </h2>
+                        <p className={`${multipleEvents ? 'mt-1 text-[14px]' : 'mt-3 text-[17px]'} font-bold text-slate-600`}>◷ {evento.horario || 'Horário a definir'}</p>
+                        <span className={`${multipleEvents ? 'mt-2 text-[11px]' : 'mt-4 text-[14px]'} inline-flex -rotate-1 bg-[#dc2626] px-3 py-1 font-black uppercase tracking-wide text-white`} style={{ clipPath: 'polygon(2% 5%,100% 0,97% 94%,0 100%)' }}>
+                          {truncate(evento.tipo, 19)}
+                        </span>
+                      </div>
+                    </div>
+                  ))}
                 </div>
               </article>
             );
-          })}
-        </div>
+          })}        </div>
         {sortedEvents.length > 8 && <div className="mx-auto mt-10 w-fit rotate-1 bg-[#facc15] px-7 py-3 text-[18px] font-black uppercase shadow-lg">+ {sortedEvents.length - 8} eventos no calendário completo</div>}
       </main>
 
