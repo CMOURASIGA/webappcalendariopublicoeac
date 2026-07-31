@@ -128,7 +128,7 @@ const AgendaMensalShareEnhanced: React.FC<Props> = ({ mes, ano, eventos }) => {
         </div>
 
         <div className="absolute right-9 top-9 rotate-3 rounded-[48%_52%_45%_55%] bg-[#facc15] px-8 py-5 shadow-[7px_8px_0_rgba(11,37,69,.18)]">
-          <p className="text-[21px] font-black uppercase leading-tight">Vive o EAC!<br />Faz acontecer!</p>
+          <p className="text-[21px] font-black uppercase leading-tight">Viva o EAC!<br />Faça acontecer!</p>
         </div>
 
         <div className="absolute left-[245px] top-[190px] w-[720px] -rotate-2">
