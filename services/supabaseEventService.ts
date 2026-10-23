@@ -19,7 +19,6 @@ interface ParsedDateTime {
 
 const SAO_PAULO_TIME_ZONE = 'America/Sao_Paulo';
 const DEFAULT_EVENTS_VIEW = 'vw_public_calendar_events';
-const APPROVED_GOOGLE_EVENTS_TABLE = 'eac_public_google_events';
 const CANCELLED_STATUSES = new Set(['CANCELADO', 'CANCELADA']);
 
 let supabaseClient: ReturnType<typeof createClient> | null = null;
@@ -238,20 +237,5 @@ export const fetchPublicEvents = async (year: number, month: number): Promise<Ca
     throw new Error(`Falha ao consultar Supabase (${viewName}): ${error.message}`);
   }
 
-  const {data: googleRows, error: googleError} = await client
-    .from(APPROVED_GOOGLE_EVENTS_TABLE)
-    .select('id, atividade, tipo, inicio, termino, local, status')
-    .eq('publication_status', 'PUBLICADO')
-    .gte('inicio', rangeStart)
-    .lt('inicio', rangeEnd)
-    .order('inicio', {ascending: true});
-  if (googleError) {
-    throw new Error('Falha ao consultar eventos Google aprovados: ' + googleError.message);
-  }
-  const internal = mapSupabaseEvents((data || []) as PublicCalendarEventRow[]);
-  const googleEvents = mapSupabaseEvents((googleRows || []) as PublicCalendarEventRow[])
-    .map(event => ({...event, id: 'google-eac:' + event.id, sourceType: 'Google EAC'}));
-  return [...internal, ...googleEvents].sort(
-    (a,b) => (a.date + ' ' + (a.startTime || '')).localeCompare(b.date + ' ' + (b.startTime || ''))
-  );
+  return mapSupabaseEvents((data || []) as PublicCalendarEventRow[]);
 };
