@@ -231,5 +231,18 @@ export const fetchPublicEvents = async (year: number, month: number): Promise<Ca
     throw new Error(`Falha ao consultar Supabase (${viewName}): ${error.message}`);
   }
 
-  return mapSupabaseEvents((data || []) as PublicCalendarEventRow[]);
+  const { data: approved, error: approvedError } = await client
+    .from('eac_public_google_events')
+    .select('id, atividade, tipo, inicio, termino, local, status')
+    .eq('source', 'GOOGLE_EAC')
+    .eq('publication_status','PUBLICADO')
+    .gte('inicio',rangeStart)
+    .lt('inicio',rangeEnd);
+  if(approvedError)throw new Error('Eventos Google EAC aprovados indisponíveis: '+approvedError.message);
+  const internal=mapSupabaseEvents((data||[]) as PublicCalendarEventRow[]);
+  const google=mapSupabaseEvents((approved||[]) as PublicCalendarEventRow[])
+    .map(ev=>({...ev,id:'google-eac:'+ev.id,sourceType:'Google EAC'}));
+  return [...internal,...google].sort((a,b)=>
+    (a.date+' '+(a.startTime||'')).localeCompare(b.date+' '+(b.startTime||'')));
+
 };
