@@ -8,6 +8,7 @@ import ListView from './components/ListViewEnhanced';
 import DaySidebar from './components/DaySidebarEnhanced';
 import HelpModal from './components/HelpModal';
 import AgendaMensalShare, { type Evento as EventoAgendaShare } from './components/AgendaMensalShareEnhanced';
+import AgendaShareTemplate, {type ArtFormat,type ArtModel,type ArtPeriod} from './components/AgendaShareTemplate';
 
 const AUTO_REFRESH_INTERVAL_MS = 30 * 60_000;
 const ALL_EVENT_TYPES = PUBLIC_EVENT_TYPES;
@@ -31,6 +32,9 @@ const App: React.FC = () => {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [isHelpOpen, setIsHelpOpen] = useState(false);
   const [isSharingAgenda, setIsSharingAgenda] = useState(false);
+  const [artFormat,setArtFormat]=useState<ArtFormat>('feed');
+  const [artModel,setArtModel]=useState<ArtModel>('colagem');
+  const [artPeriod,setArtPeriod]=useState<ArtPeriod>('mes');
   const isFetchingRef = useRef(false);
   const shareCardRef = useRef<HTMLDivElement | null>(null);
 
@@ -308,6 +312,11 @@ const App: React.FC = () => {
                 Auto-refresh 30 min • Última atualização: {lastSyncLabel}
               </p>
               <div className="w-full md:w-auto flex flex-col sm:flex-row gap-2">
+                <div className="flex flex-wrap gap-2 rounded-xl border border-blue-100 bg-white p-2" aria-label="Personalizar arte da agenda">
+                  <label className="text-xs font-semibold text-slate-600">Peça<select aria-label="Tipo de peça" value={artPeriod} onChange={e=>setArtPeriod(e.target.value as ArtPeriod)} className="block rounded-lg border p-2 text-slate-900"><option value="mes">Agenda mensal</option><option value="semana">Agenda semanal</option><option value="evento">Evento destaque</option></select></label>
+                  <label className="text-xs font-semibold text-slate-600">Canal<select aria-label="Formato da arte" value={artFormat} onChange={e=>setArtFormat(e.target.value as ArtFormat)} className="block rounded-lg border p-2 text-slate-900"><option value="feed">Feed / WhatsApp (1080×1350)</option><option value="story">Story / Status (1080×1920)</option><option value="square">Quadrado (1080×1080)</option></select></label>
+                  <label className="text-xs font-semibold text-slate-600">Estilo<select aria-label="Modelo visual" value={artModel} onChange={e=>setArtModel(e.target.value as ArtModel)} className="block rounded-lg border p-2 text-slate-900"><option value="colagem">Jovem / Colagem</option><option value="clean">Clean / Moderno</option><option value="destaque">Destaque forte</option></select></label>
+                </div>
                 <button
                   onClick={handleShareAgenda}
                   disabled={loading || isSharingAgenda || Boolean(errorMessage)}
@@ -467,11 +476,7 @@ const App: React.FC = () => {
 
       <div className="fixed -left-[9999px] top-0 opacity-0 pointer-events-none" aria-hidden="true">
         <div ref={shareCardRef}>
-          <AgendaMensalShare
-            mes={currentMonthLabel}
-            ano={currentYear}
-            eventos={agendaShareEvents}
-          />
+          <AgendaShareTemplate mes={currentMonthLabel} ano={currentYear} eventos={agendaShareEvents} formato={artFormat} modelo={artModel} periodo={artPeriod} />
         </div>
       </div>
 
